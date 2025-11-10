@@ -16,28 +16,33 @@ class ReportController extends Controller
     /**
      * Helper: create a notification for a single user with small duplicate prevention.
      * If $reportId is set, we append a tag to message so related notifications can be grouped.
+     * 
+     * ✅ UPDATED: Now uses broadcast() for real-time notifications (instead of event()).
+     * This ensures the frontend can listen and play purge.mp3 for reporter/designated roles.
      */
     private function createNotificationForUser(int $userId, string $message, ?string $role = null, ?int $reportId = null)
-{
-    $tag = $reportId ? " ||report:{$reportId}" : '';
+    {
+        $tag = $reportId ? " ||report:{$reportId}" : '';
 
-    $exists = Notification::where('user_id', $userId)
-        ->where('message', $message . $tag)
-        ->whereNull('deleted_at')
-        ->where('created_at', '>=', now()->subMinutes(2))
-        ->exists();
+        $exists = Notification::where('user_id', $userId)
+            ->where('message', $message . $tag)
+            ->whereNull('deleted_at')
+            ->where('created_at', '>=', now()->subMinutes(2))
+            ->exists();
 
-    if (!$exists) {
-        $notif = Notification::create([
-            'user_id' => $userId,
-            'message' => $message . $tag,
-            'role'    => $role,
-        ]);
+        if (!$exists) {
+            // ✅ UPDATED: Include 'report_id' in the create (matches your Notification model fillable)
+            $notif = Notification::create([
+                'user_id' => $userId,
+                'message' => $message . $tag,
+                'role' => $role,
+                'report_id' => $reportId, // ✅ Added this
+            ]);
 
-        // ✅ broadcast the new notification
-        event(new NewNotification($notif));
+            // ✅ UPDATED: Use broadcast() for real-time notifications (replaces event())
+            broadcast(new NewNotification($notif))->toOthers(); // Optional: ->toOthers() to exclude the sender
+        }
     }
-}
 
     public function create()
     {
@@ -117,101 +122,142 @@ class ReportController extends Controller
      * - If BFP accepts -> notify reporter AND designated personnel. Notification persists until BFP clicks "Fire Under Control".
      */
     public function accept(Request $request, Report $report)
-{
-    $user = Auth::user();
-    $role = $user->role; // rescue, pnp, or bfp
+    {
+        $user = Auth::user();
+        $role = $user->role; // rescue, pnp, or bfp
 
-    // Update report status and who accepted it
-    $report->update([
-        'status' => 'accepted',
-        'accepted_by' => $user->id,
-        'accepted_at' => now(),
-    ]);
+        // Update report status and who accepted it
+        $report->update([
+            'status' => 'accepted',
+            'accepted_by' => $user->id,
+            'accepted_at' => now(),
+        ]);
 
-    if ($role === 'bfp') {
-        /**
-         * ✅ FIX 1 — Prevent duplicate notifications
-         * Check if this report already has "BFP accepted" type notification recently.
-         */
-        $exists = Notification::where('role', 'bfp')
-            ->where('message', 'like', '%BFP accepted report%')
-            ->where('message', 'like', "%report:{$report->id}%")
-            ->exists();
+        if ($role === 'bfp') {
+            /**
+             * ✅ FIX 1 — Prevent duplicate notifications
+             * Check if this report already has "BFP accepted" type notification recently.
+             */
+            $exists = Notification::where('role', 'bfp')
+                ->where('message', 'like', '%BFP accepted report%')
+                ->where('message', 'like', "%report:{$report->id}%")
+                ->exists();
 
-        if (!$exists) {
-            // Notify other BFP users for visibility
-            $bfpUsers = User::where('role', 'bfp')->get();
-            foreach ($bfpUsers as $bfpUser) {
+            if (!$exists) {
+                // Notify other BFP users for visibility
+                $bfpUsers = User::where('role', 'bfp')->get();
+                foreach ($bfpUsers as $bfpUser) {
+                    $this->createNotificationForUser(
+                        $bfpUser->id,
+                        '🔥 BFP accepted report (Level ' . $report->level . ')',
+                        'bfp',
+                        $report->id
+                    );
+                }
+            }
+
+            /**
+             * ✅ FIX 2 — Notify reporter and designated personnel once
+             * "BFP confirmed fire" messages appear on their dashboards.
+             */
+            $this->createNotificationForUser(
+                $report->reporter_id,
+                '🔥 BFP confirmed fire for your report (Level ' . $report->level . ')',
+                'reporter',
+                $report->id
+            );
+
+            $designatedUsers = User::where('role', 'designated')->get();
+            foreach ($designatedUsers as $designated) {
                 $this->createNotificationForUser(
-                    $bfpUser->id,
-                    '🔥 BFP accepted report (Level ' . $report->level . ')',
-                    'bfp',
+                    $designated->id,
+                    '🔥 BFP confirmed fire (Level ' . $report->level . ').',
+                    'designated',
                     $report->id
                 );
             }
+            //added
+            $rescues = User::where('role', 'rescue')->get();
+            foreach ($rescues as $rescue) {
+                $this->createNotificationForUser(
+                    $rescue->id,
+                    '🔥 BFP confirmed fire (Level ' . $report->level . ').',
+                    'designated',
+                    $report->id
+                );
+            }
+            $pnps = User::where('role', 'pnp')->get();
+            foreach ($pnps as $pnp) {
+                $this->createNotificationForUser(
+                    $pnp->id,
+                    '🔥 BFP confirmed fire (Level ' . $report->level . ').',
+                    'designated',
+                    $report->id
+                );
+            }
+
+        } else {
+            // RESCUE or PNP -> notify reporter only
+            $this->createNotificationForUser(
+                $report->reporter_id,
+                '✅ ' . strtoupper($role) . ' accepted your report (Level ' . $report->level . ')',
+                'reporter',
+                $report->id
+            );
         }
 
-        /**
-         * ✅ FIX 2 — Notify reporter and designated personnel once
-         * "BFP confirmed fire" messages appear on their dashboards.
-         */
+        return redirect()->route('dashboard')->with('success', ucfirst($role) . ' accepted the report.');
+    }
+
+    public function markUnderControl(Request $request, Report $report)
+    {
+        // 🔹 Update the report status properly with quotes
+        $report->update([
+            'status' => 'controlled',
+            'controlled_at' => now(),
+        ]);
+
+        // 🔹 Notify the reporter that the fire is under control
         $this->createNotificationForUser(
             $report->reporter_id,
-            '🔥 BFP confirmed fire for your report (Level ' . $report->level . ')',
+            '🔥 Your reported fire incident is now under control (Report ID: ' . $report->id . ')',
             'reporter',
             $report->id
         );
 
+        // 🔹 Notify designated personnel
         $designatedUsers = User::where('role', 'designated')->get();
         foreach ($designatedUsers as $designated) {
             $this->createNotificationForUser(
                 $designated->id,
-                '🔥 BFP confirmed fire (Level ' . $report->level . ').',
+                '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
                 'designated',
                 $report->id
             );
         }
-    } else {
-        // RESCUE or PNP -> notify reporter only
-        $this->createNotificationForUser(
-            $report->reporter_id,
-            '✅ ' . strtoupper($role) . ' accepted your report (Level ' . $report->level . ')',
-            'reporter',
-            $report->id
-        );
+        //added
+        $rescues = User::where('role', 'rescue')->get();
+        foreach ($rescues as $rescue) {
+            $this->createNotificationForUser(
+                $rescue->id,
+                '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
+                'designated',
+                $report->id
+            );
+        }
+
+         $pnps = User::where('role', 'pnp')->get();
+        foreach ($pnps as $pnp) {
+            $this->createNotificationForUser(
+                $pnp->id,
+                '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
+                'designated',
+                $report->id
+            );
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Fire marked as under control.');
     }
-
-    return redirect()->route('dashboard')->with('success', ucfirst($role) . ' accepted the report.');
-}
-public function markUnderControl(Request $request, Report $report)
-{
-    // 🔹 Update the report status properly with quotes
-    $report->update([
-        'status' => 'controlled',
-        'controlled_at' => now(),
-    ]);
-
-    // 🔹 Notify the reporter that the fire is under control
-    $this->createNotificationForUser(
-        $report->reporter_id,
-        '🔥 Your reported fire incident is now under control (Report ID: ' . $report->id . ')',
-        'reporter',
-        $report->id
-    );
-
-    // 🔹 Notify designated personnel
-    $designatedUsers = User::where('role', 'designated')->get();
-    foreach ($designatedUsers as $designated) {
-        $this->createNotificationForUser(
-            $designated->id,
-            '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
-            'designated',
-            $report->id
-        );
-    }
-
-    return redirect()->route('dashboard')->with('success', 'Fire marked as under control.');
-}
 
     // ...generate / generatePdf code kept as-is (unchanged)
     public function generate()

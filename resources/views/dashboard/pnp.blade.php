@@ -72,6 +72,7 @@
     @include('reports.assigned')
 </div>
 
+
 <a href="{{ route('reports.generate') }}" class="btn btn-glass">📑 Generate Report</a>
 
 </div>

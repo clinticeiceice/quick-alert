@@ -6,7 +6,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AuthController;
+use Illuminate\Support\Facades\Broadcast;
 
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Route::get('/', function () {
     return view('welcome');

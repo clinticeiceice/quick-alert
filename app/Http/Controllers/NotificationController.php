@@ -133,4 +133,34 @@ class NotificationController extends Controller
 
     return redirect()->back()->with('success', 'All notifications marked as read.');
 }
+//added new
+public function store(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string|max:255',
+        ]);
+
+        // Save notification
+        $notification = Notification::create([
+            'message' => $request->message,
+            'status' => 'unread',
+        ]);
+
+        // Broadcast to specific roles
+        $users = User::whereIn('role', ['reporter', 'designated'])->get();
+
+        foreach ($users as $user) {
+            $notificationData = [
+                'id' => $notification->id,
+                'message' => $notification->message,
+                'user_id' => $user->id,
+                'created_at' => $notification->created_at,
+            ];
+
+            event(new \App\Events\NewNotification((object) $notificationData));
+        }
+
+        return response()->json(['success' => true]);
+    }
+
 }

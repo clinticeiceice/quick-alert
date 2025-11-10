@@ -61,20 +61,21 @@
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
         }
         .btn-install {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 14px;
-    font-weight: 500;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
+
 <script>
 function markNotificationsRead() {
     fetch("{{ route('notifications.readAll') }}", {
@@ -96,7 +97,7 @@ function markNotificationsRead() {
     });
 }
 </script>
-<!-- Siren Sound -->
+
 <!-- Siren Sound -->
 <audio id="sirenSound" src="{{ asset('sounds/purge.mp3') }}" preload="auto"></audio>
 
@@ -105,11 +106,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const userId = @json(auth()->id());
 
     if (userId) {
+        // keep your Echo listener here — it does not affect dropdown clickability
         window.Echo.private(`user.${userId}`)
             .listen("NewNotification", (e) => {
                 console.log("📢 New notification received:", e.notification);
 
-                // Show alert or UI update
+                // show a quick alert (you may remove alert if you prefer UI-only)
                 alert(e.notification.message);
 
                 // Play siren sound
@@ -122,127 +124,130 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg glass-navbar fixed-top">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url('/') }}">
-            🚨 Quick Alert
-        </a>
-
-        <div class="d-flex justify-content-end align-items-center" id="navbarNav">
-            <!-- Install App Button -->
-            <a class="nav-item">
-                <button id="installAppBtn" class="btn btn-install d-none">📲 Install App</button>
+        <div class="container">
+            <a class="navbar-brand" href="{{ url('/') }}">
+                🚨 Quick Alert
             </a>
 
-            @guest
-                <a class="nav-link text-white me-3" href="{{ route('login') }}">Login</a>
-                <a class="nav-link text-white me-3" href="{{ route('register') }}">Register</a>
-            @else
-                <!-- 🔔 Notification Dropdown -->
-                <a class="nav-item dropdown">
-                    <a 
-                        class="nav-link dropdown-toggle position-relative text-white" 
-                        href="#" 
-                        id="notificationDropdown" 
-                        role="button" 
-                        data-bs-toggle="dropdown" 
-                        aria-expanded="false"
-                    >
-                        🔔
-                        @php
-                            $unreadCount = \App\Models\Notification::where('user_id', Auth::id())
-                                            ->where('is_read', false)
-                                            ->count();
-                        @endphp
-                        @if($unreadCount > 0)
-                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                                {{ $unreadCount }}
-                            </span>
-                        @endif
-                    </a>
+            <div class="d-flex justify-content-end align-items-center" id="navbarNav">
 
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
-                        @forelse(\App\Models\Notification::where('user_id', Auth::id())->orderBy('created_at','desc')->take(5)->get() as $notif)
-                            <li>
-                                <span class="dropdown-item {{ $notif->is_read ? '' : 'fw-bold' }}">
-                                    {{ $notif->message }}
+                <!-- Install App Button -->
+                <div class="nav-item me-2">
+                    <button id="installAppBtn" class="btn btn-install d-none">📲 Install App</button>
+                </div>
+
+                @guest
+                    <a class="nav-link text-white me-3" href="{{ route('login') }}">Login</a>
+                    <a class="nav-link text-white me-3" href="{{ route('register') }}">Register</a>
+                @else
+                    <!-- ********* FIXED NOTIFICATION DROPDOWN *********
+                         Changes made:
+                         1) Replaced invalid <a class="nav-item dropdown"> wrapper with <div class="nav-item dropdown"> to avoid nested anchors.
+                         2) Ensured dropdown toggle is an <a> with data-bs-toggle="dropdown".
+                         3) Used proper </div> closing (removed the stray </l>).
+                         4) Each notification list item is an <a class="dropdown-item"> so clicks behave correctly.
+                    -->
+                    <div class="nav-item dropdown">
+                        <a 
+                            class="nav-link dropdown-toggle position-relative text-white" 
+                            href="#" 
+                            id="notificationDropdown" 
+                            role="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false"
+                            onclick="markNotificationsRead()"   <!-- optional: mark as read when opened -->
+                        
+                            🔔
+                            @php
+                                $unreadCount = \App\Models\Notification::where('user_id', Auth::id())
+                                                ->where('is_read', false)
+                                                ->count();
+                            @endphp
+                            @if($unreadCount > 0)
+                                <span id="notifCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                                    {{ $unreadCount }}
                                 </span>
+                            @endif
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="min-width:280px;">
+                            @forelse(\App\Models\Notification::where('user_id', Auth::id())->orderBy('created_at','desc')->take(5)->get() as $notif)
+                                <li>
+                                    <!-- make each item clickable (change href to actual route if you have one) -->
+                                    <a href="#" class="dropdown-item {{ $notif->is_read ? '' : 'fw-bold' }}">
+                                        {{ $notif->message }}
+                                    </a>
+                                </li>
+                            @empty
+                                <li><a class="dropdown-item">No notifications</a></li>
+                            @endforelse
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{{ route('notifications.markAllRead') }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-center">
+                                        ✅ Mark All as Read
+                                    </button>
+                                </form>
                             </li>
-                        @empty
-                            <li><span class="dropdown-item">No notifications</span></li>
-                        @endforelse
+                        </ul>
+                    </div>
+                    <!-- ********* END FIX ********* -->
 
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form action="{{ route('notifications.markAllRead') }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-center">
-                                    ✅ Mark All as Read
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </l>
-
-                <!-- User Greeting + Logout -->
-                <span class="text-white ms-3">👋 Hello, {{ Auth::user()->name }}</span>
-                <a class="btn btn-outline-light btn-sm ms-3" href="{{ route('logout') }}"
-                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    Logout
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                    @csrf
-                </form>
-            @endguest
+                    <!-- User Greeting + Logout -->
+                    <span class="text-white ms-3">👋 Hello, {{ Auth::user()->name }}</span>
+                    <a class="btn btn-outline-light btn-sm ms-3" href="{{ route('logout') }}"
+                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        Logout
+                    </a>
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
+                @endguest
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<script>
-    let deferredPrompt;
-    const installBtn = document.getElementById('installAppBtn');
+    <script>
+        let deferredPrompt;
+        const installBtn = document.getElementById('installAppBtn');
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installBtn.classList.remove('d-none'); // show button
-    });
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.classList.remove('d-none'); // show button
+        });
 
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                console.log("✅ App installed");
-            } else {
-                console.log("❌ Install dismissed");
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log("✅ App installed");
+                } else {
+                    console.log("❌ Install dismissed");
+                }
+                deferredPrompt = null;
+                installBtn.classList.add('d-none'); // hide after install
             }
-            deferredPrompt = null;
-            installBtn.classList.add('d-none'); // hide after install
-        }
-    });
-</script>
-
-
-
-
+        });
+    </script>
 
     <main class="container py-5 mt-5">
         @yield('content')
     </main>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
             .then(() => console.log("Service Worker Registered"));
     }
     </script>
-
 </body>
 </html>
