@@ -1,8 +1,16 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+     <!-- Manifest link -->
     <link rel="manifest" href="/manifest.json">
+    
+    <!-- Theme color for mobile browsers -->
     <meta name="theme-color" content="#111010">
+    
+    <!-- iOS specific -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/quick.png">
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -77,6 +85,7 @@
 </head>
 
 <script>
+    
 function markNotificationsRead() {
     fetch("{{ route('notifications.readAll') }}", {
         method: "POST",
@@ -102,27 +111,285 @@ function markNotificationsRead() {
 <audio id="sirenSound" src="{{ asset('sounds/purge.mp3') }}" preload="auto"></audio>
 
 <script>
+    
 document.addEventListener("DOMContentLoaded", function () {
     const userId = @json(auth()->id());
+
+
+const subscribeButton = document.getElementById('enableNotifications');
+    
+    if (subscribeButton) {
+        subscribeButton.addEventListener('click', function() {
+            checkPushSupportAndShowButton();
+        });
+    }
+    
+
+    async function checkPushSupportAndShowButton() {
+        
+        const permission = await Notification.requestPermission();
+    if (('serviceWorker' in navigator && 'PushManager' in window) || permission !== 'granted') {
+        const button = document.getElementById('enableNotifications');
+        
+        if (permission !== 'granted') {
+            if (button) {
+            button.style.display = 'block';
+        }
+        
+            return;
+    }else {
+            if (button) {
+            button.style.display = 'none';
+        }return;
+        }
+
+        
+        console.log('Push notifications supported - button enabled');
+    } else {
+        console.log('Push notifications not supported');
+    }
+    
+}
+
+
+    checkPushSupportAndShowButton();
+
+
+
+    async function subscribeUser() {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            console.log('Notification permission denied');
+            return;
+        }
+
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Check existing subscription
+        let subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            console.log('Already subscribed:', subscription);
+            await sendSubscriptionToServer(subscription);
+            return;
+        }
+
+        // REPLACE WITH YOUR NEW VAPID PUBLIC KEY
+        const vapidPublicKey = 'BPRPMonD2d8BLXuTQ8z9uBC-femD2TBeWK4nODcOrgn3P9mJD8aJ5Ia7QQKDItRNITiAHZIMDZp_eEfFj754mpA';
+        
+        const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
+        
+        // Verify the key format
+        if (convertedKey.length !== 65) {
+            console.error('Invalid VAPID key format');
+            return;
+        }
+
+        const subscriptionOptions = {
+            userVisibleOnly: true,
+            applicationServerKey: convertedKey
+        };
+
+        console.log('Attempting subscription with valid VAPID key...');
+        subscription = await registration.pushManager.subscribe(subscriptionOptions);
+        
+        console.log('✅ Subscription successful!');
+        console.log('Endpoint:', subscription.endpoint);
+        
+        // Send to server
+        await sendSubscriptionToServer(subscription);
+        
+    } catch (error) {
+        console.error('❌ Subscription failed:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+    }
+}
+
+async function handleSubscriptionError(error) {
+    if (error.name === 'AbortError') {
+        console.error('AbortError details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        
+        // Try alternative approach
+        await tryAlternativeSubscription();
+    }
+}
+
+async function tryAlternativeSubscription() {
+    console.log('Trying alternative subscription method...');
+    
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Try without applicationServerKey first to see if basic push works
+        const testSubscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true
+            // No applicationServerKey - this should work for some browsers
+        });
+        
+        console.log('Subscription without VAPID key worked:', testSubscription);
+        await testSubscription.unsubscribe();
+        console.log('Test subscription removed');
+        
+    } catch (noKeyError) {
+        console.log('Subscription without VAPID key also failed:', noKeyError);
+    }
+}
+
+    async function sendSubscriptionToServer(subscription) {
+        try {
+            await window.Axios.post("/subscribe", subscription.toJSON(), {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                },
+            });
+            console.log('Subscription sent to server successfully');
+        } catch (error) {
+            console.error('Failed to send subscription to server:', error);
+        }
+    }
+
+    // Make sure you have this utility function
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    if ("Notification" in window && navigator.serviceWorker) {
+       subscribeUser();
+    }
+
+
+
+    //
+    navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data?.type === "PLAY_SOUND") {
+            playNotificationSound(event.data.sound);
+        }
+    });
+
+    function playNotificationSound(src) {
+        const audio = new Audio(src);
+        audio.play().catch((err) => {
+            console.warn("Audio play failed (probably no user gesture yet):", err);
+        });
+    }
 
     if (userId) {
         // keep your Echo listener here — it does not affect dropdown clickability
         window.Echo.private(`user.${userId}`)
             .listen("NewNotification", (e) => {
-                console.log("📢 New notification received:", e.notification);
 
-                // show a quick alert (you may remove alert if you prefer UI-only)
-                alert(e.notification.message);
+                if (e.role === 'reporter' || e.role === 'designated' || e.role === 'rescue' || e.role === 'pnp') {
+                    if (Notification.permission === "granted") {
+                        new Notification("New Message", {
+                            body: e.notification.message,
+                        });
+                    }
+                }
 
-                // Play siren sound
-                const siren = document.getElementById("sirenSound");
-                siren.currentTime = 0; // restart sound
-                siren.play().catch(err => {
-                    console.log("⚠️ Autoplay blocked, waiting for user interaction", err);
-                });
+                // // show a quick alert (you may remove alert if you prefer UI-only)
+                // alert(e.notification.message);
+
+                // // Play siren sound
+                // const siren = document.getElementById("sirenSound");
+                // siren.currentTime = 0; // restart sound
+                // siren.play().catch(err => {
+                //     console.log("⚠️ Autoplay blocked, waiting for user interaction", err);
+                // });
             });
     }
+
+
+
+
+     let audioCtx;
+    let audioBuffer;
+    let audioUnlocked = false;
+
+    // Create and unlock AudioContext on user gesture
+    async function unlockAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        if (audioCtx.state === "suspended") {
+            await audioCtx.resume();
+        }
+
+        if (!audioUnlocked) {
+            await loadSound("/sounds/purge.mp3");
+            audioUnlocked = true;
+            console.log("🔓 Audio context unlocked & sound loaded");
+        }
+    }
+
+    // Fetch and decode the audio file into a buffer
+    async function loadSound(url) {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        }
+
+        // Play the sound
+        function playSound() {
+        if (!audioUnlocked || !audioBuffer) {
+            console.warn("Audio not unlocked or buffer not loaded");
+            return;
+        }
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+    }
+
+    if (!audioUnlocked) {
+        (async () => {
+            await unlockAudio();
+        })
+        document.getElementById("enable-sound").style.display = 'block';
+    }else {
+        document.getElementById("enable-sound").style.display = 'none';
+    }
+
+    // Handle user click to unlock
+    document.getElementById("enable-sound").addEventListener("click", async () => {
+        await unlockAudio();
+        document.getElementById("enable-sound").textContent = "✅ Sound Enabled";
+    });
+
+    // Listen for service worker messages
+    navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data?.type === "PLAY_SOUND") {
+            playSound();
+        }
+    });
+
+
+
+
 });
+
+
+
+
+   
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -140,7 +407,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="nav-item me-2">
                     <button id="installAppBtn" class="btn btn-install d-none">📲 Install App</button>
                 </div>
+                
+                <button id="enable-sound" class="btn btn-install d-none">🔊 Enable Sound Alerts</button>
 
+                <button id="enableNotifications" class="btn btn-install" style="display: none">
+    🚨 Enable Push Notifications
+</button>
                 @guest
                     <a class="nav-link text-white me-3" href="{{ route('login') }}">Login</a>
                     <a class="nav-link text-white me-3" href="{{ route('register') }}">Register</a>
@@ -160,7 +432,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             role="button" 
                             data-bs-toggle="dropdown" 
                             aria-expanded="false"
-                            onclick="markNotificationsRead()"   <!-- optional: mark as read when opened -->
+                            onclick="markNotificationsRead()"   
+                        >
                         
                             🔔
                             @php
@@ -245,7 +518,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
+        navigator.serviceWorker.register('/service-worker.js?v=2')
             .then(() => console.log("Service Worker Registered"));
     }
     </script>

@@ -20,8 +20,6 @@ return new class extends Migration
         $table->enum('designated_to', ['rescue', 'pnp', 'bfp']);
         $table->timestamp('reported_at')->useCurrent();
         $table->timestamps();
-        $table->unsignedBigInteger('reporter_id');
-$table->foreign('reporter_id')->references('id')->on('users')->onDelete('cascade');
 
     });
 }

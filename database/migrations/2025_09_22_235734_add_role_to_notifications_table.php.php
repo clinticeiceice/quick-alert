@@ -9,16 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->string('role')->nullable()->after('message');
-            $table->boolean('is_read')->default(false)->after('role');
-        });
-    }
+//    public function up(): void {
+//         Schema::table('notifications', function (Blueprint $table) {
+//             $table->string('role')->nullable()->after('message');
+//             $table->boolean('is_read')->default(false)->after('role');
+//         });
+//     }
 
-    public function down(): void {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->dropColumn(['role', 'is_read']);
-        });
-    }
+//     public function down(): void {
+//         Schema::table('notifications', function (Blueprint $table) {
+//             $table->dropColumn(['role', 'is_read']);
+//         });
+//     }
 };

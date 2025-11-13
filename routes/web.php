@@ -6,7 +6,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
@@ -47,6 +49,11 @@ Route::post('/notifications/mark-all-read', [NotificationController::class, 'mar
 Route::post('/notifications/{reportId}/mark-as-controlled', [NotificationController::class, 'markAsControlled'])
     ->name('notifications.markAsControlled');
 
+    Route::post('/subscribe', function (Request $request) {
+        Log::info('subscriber user:' , [$request->user()]);
+        $request->user()->updatePushSubscription($request->get('endpoint'), $request->get('keys')['p256dh'], $request->get('keys')['auth'], 'aesgcm');
+        return response()->json(['success' => true]);
+    });
 
 
 
@@ -79,3 +86,6 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login.form');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+
+Broadcast::routes();

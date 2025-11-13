@@ -2,43 +2,81 @@
 
 namespace App\Notifications;
 
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\BroadcastMessage;
+use NotificationChannels\WebPush\WebPushMessage;
+use NotificationChannels\WebPush\WebPushChannel;
 
-class FireAlertNotification extends Notification implements ShouldQueue
+class FireAlertNotification extends Notification  implements ShouldBroadcast
 {
-    use Queueable;
 
-    public $report;
+    protected $data;
+    protected $designatedTo;
+    protected $soundAlert;
 
-    public function __construct($report)
+    public function __construct($data, $designatedTo, $soundAlert)
     {
-        $this->report = $report;
+        $this->data = $data;
+        $this->designatedTo = $designatedTo;
+        $this->soundAlert = $soundAlert;
     }
 
     public function via($notifiable)
     {
-        return ['mail', 'database']; // You can add 'broadcast' for real-time
+        return [WebPushChannel::class];
     }
 
-    public function toMail($notifiable)
-    {
-        return (new MailMessage)
-            ->subject('🚨 Fire Alert')
-            ->line('A fire has been reported!')
-            ->line('Severity Level: ' . $this->report->level)
-            ->line('Location/Details: ' . $this->report->description)
-            ->action('View Report', url('/reports/' . $this->report->id));
-    }
-
+    // ✅ Store notification record in "notifications" table
     public function toArray($notifiable)
     {
         return [
-            'report_id' => $this->report->id,
-            'level' => $this->report->level,
-            'description' => $this->report->description,
+            'user_id'   => $this->data->user_id,
+            'report_id' => $this->data->report_id,
+            'role'      => $this->data->role,
+            'message'   => $this->data->message,
         ];
+    }
+
+
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage([
+            'notification' => 'hello',
+            'role' => 1,
+        ]);
+    }
+
+    public function toWebPush($notifiable, $notification)
+    {
+        $title = "New Report";
+
+        switch ($this->designatedTo) {
+            case 'rescue':
+                $title = "Rescue Report Alert!";
+                break;
+            case 'pnp':
+                $title = "PNP Report Alert!";
+                break;
+            case 'bfp':
+                $title = "BFP Report Alert!";
+                break;
+            
+            default:
+                $title = "New Report Alert!";
+                break;
+        }
+
+        return (new WebPushMessage)
+            ->title($title)
+            ->body($this->data->message)
+            ->action('View Order', 'view_order')
+            ->data([
+                'notification' => $this->data,
+                'role' => $this->data->role,
+                'soundAlert' => $this->soundAlert
+            ]);
     }
 }

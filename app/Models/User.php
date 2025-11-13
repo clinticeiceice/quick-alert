@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use NotificationChannels\WebPush\HasPushSubscriptions;
+use NotificationChannels\WebPush\PushSubscription;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use  HasFactory, Notifiable, HasPushSubscriptions;
 
     /**
      * The attributes that are mass assignable.
@@ -54,5 +56,36 @@ class User extends Authenticatable
     public function approvedReports()
     {
         return $this->hasMany(Report::class, 'approved_by');
+    }
+
+
+     /**
+      * Overide updatePushSubscription with user
+     * Update (or create) subscription.
+     */
+    public function updatePushSubscription(string $endpoint, ?string $key = null, ?string $token = null, ?string $contentEncoding = null): PushSubscription
+    {
+        // select subscription by user
+        $subscription = app(config('webpush.model'))->where('subscribable_id', $this->getKey())->where('subscribable_type', $this->getMorphClass())->first();
+
+        if ($subscription && $this->ownsPushSubscription($subscription)) {
+            $subscription->public_key = $key;
+            $subscription->auth_token = $token;
+            $subscription->content_encoding = $contentEncoding;
+            $subscription->save();
+
+            return $subscription;
+        }
+
+        if ($subscription && ! $this->ownsPushSubscription($subscription)) {
+            $subscription->delete();
+        }
+
+        return $this->pushSubscriptions()->create([
+            'endpoint' => $endpoint,
+            'public_key' => $key,
+            'auth_token' => $token,
+            'content_encoding' => $contentEncoding,
+        ]);
     }
 }

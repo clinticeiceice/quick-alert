@@ -11,14 +11,14 @@ return new class extends Migration
      */
    public function up()
 {
-    Schema::table('notifications', function (Blueprint $table) {
-        $table->unsignedBigInteger('report_id')->nullable(); // Adjust as needed (e.g., foreign key)
-    });
+    // Schema::table('notifications', function (Blueprint $table) {
+    //     $table->unsignedBigInteger('report_id')->nullable(); // Adjust as needed (e.g., foreign key)
+    // });
 }
 public function down()
 {
-    Schema::table('notifications', function (Blueprint $table) {
-        $table->dropColumn('report_id');
-    });
+    // Schema::table('notifications', function (Blueprint $table) {
+    //     $table->dropColumn('report_id');
+    // });
 }
 };

@@ -9,17 +9,17 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
-{
-    Schema::table('notifications', function (Blueprint $table) {
-        $table->softDeletes(); // this adds `deleted_at` column
-    });
-}
+//     public function up()
+// {
+//     Schema::table('notifications', function (Blueprint $table) {
+//         $table->softDeletes(); // this adds `deleted_at` column
+//     });
+// }
 
-public function down()
-{
-    Schema::table('notifications', function (Blueprint $table) {
-        $table->dropSoftDeletes();
-    });
-}
+// public function down()
+// {
+//     Schema::table('notifications', function (Blueprint $table) {
+//         $table->dropSoftDeletes();
+//     });
+// }
 };

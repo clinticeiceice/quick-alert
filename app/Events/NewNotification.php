@@ -7,6 +7,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class NewNotification implements ShouldBroadcastNow
 {
@@ -22,11 +23,6 @@ class NewNotification implements ShouldBroadcastNow
     public function broadcastOn()
     {
         return new PrivateChannel('user.' . $this->notification->user_id);
-    }
-
-    public function broadcastAs()
-    {
-        return 'NewNotification';
     }
 
     public function broadcastWith()
