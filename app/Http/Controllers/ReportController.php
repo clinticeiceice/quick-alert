@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\FireNotificationService;
 use App\Events\NewNotification;
 use App\Notifications\FireAlertNotification;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -21,7 +22,7 @@ class ReportController extends Controller
      * ✅ UPDATED: Now uses broadcast() for real-time notifications (instead of event()).
      * This ensures the frontend can listen and play purge.mp3 for reporter/designated roles.
      */
-    private function createNotificationForUser(int $userId, string $message, ?string $role = null, ?int $reportId = null, ?string $designatedTo = "", ?bool $soundAlert = false)
+    private function createNotificationForUser(int $userId, string $message, ?string $role = null, ?int $reportId = null, ?string $designatedTo = "", bool $soundAlert = false)
     {
         $tag = $reportId ? " ||report:{$reportId}" : '';
 
@@ -48,6 +49,7 @@ class ReportController extends Controller
                 // ✅ Triggers both DB save and Pusher broadcast
                 // event(new \App\Events\PusherTestEvent("hello Wordl!"));
                 // event(new NewNotification($notif));
+                Log::info('Notification data: ', [$notif, $designatedTo, $soundAlert]);
                 $user->notify(new FireAlertNotification($notif, $designatedTo, $soundAlert));
             }
         }
@@ -117,7 +119,7 @@ class ReportController extends Controller
         $message = '🚨 New report assigned to ' . strtoupper($report->designated_to) . ' (Level ' . $report->level . ')';
        
         foreach ($assignedUsers as $u) {
-            $this->createNotificationForUser($u->id, $message, $report->designated_to, $report->id, $report->id, $request->get('designated_to'));
+            $this->createNotificationForUser($u->id, $message, $report->designated_to, $report->id, $request->get('designated_to'));
         }
 
         return redirect()->route('dashboard')->with('success', 'Report approved successfully.');
@@ -160,7 +162,8 @@ class ReportController extends Controller
                         $bfpUser->id,
                         '🔥 BFP accepted report (Level ' . $report->level . ')',
                         'bfp',
-                        $report->id, $report->id, $request->get('designated_to'),
+                        $report->id, 
+                        $request->get('designated_to'),
                         true
                     );
                 }
@@ -174,7 +177,8 @@ class ReportController extends Controller
                 $report->reporter_id,
                 '🔥 BFP confirmed fire for your report (Level ' . $report->level . ')',
                 'reporter',
-                $report->id, $report->id, $request->get('designated_to'),
+                $report->id,
+                 $request->get('designated_to'),
                 true
             );
 
@@ -184,7 +188,8 @@ class ReportController extends Controller
                     $designated->id,
                     '🔥 BFP confirmed fire (Level ' . $report->level . ').',
                     'designated',
-                    $report->id, $report->id, $request->get('designated_to'),
+                 $report->id, 
+                 $request->get('designated_to'),
                 true
                 );
             }
@@ -195,7 +200,8 @@ class ReportController extends Controller
                     $rescue->id,
                     '🔥 BFP confirmed fire (Level ' . $report->level . ').',
                     'designated',
-                    $report->id, $report->id, $request->get('designated_to'),
+                    $report->id, 
+                     $request->get('designated_to'),
                 true
                 );
             }
@@ -205,7 +211,8 @@ class ReportController extends Controller
                     $pnp->id,
                     '🔥 BFP confirmed fire (Level ' . $report->level . ').',
                     'designated',
-                    $report->id, $report->id, $request->get('designated_to'),
+                    $report->id, 
+                     $request->get('designated_to'),
                 true
                 );
             }
@@ -216,7 +223,8 @@ class ReportController extends Controller
                 $report->reporter_id,
                 '✅ ' . strtoupper($role) . ' accepted your report (Level ' . $report->level . ')',
                 'reporter',
-                $report->id, $report->id, $request->get('designated_to')
+                $report->id, 
+                 $request->get('designated_to')
             );
         }
 
@@ -236,7 +244,8 @@ class ReportController extends Controller
             $report->reporter_id,
             '🔥 Your reported fire incident is now under control (Report ID: ' . $report->id . ')',
             'reporter',
-            $report->id, $report->id, $request->get('designated_to')
+            $report->id, 
+             $request->get('designated_to')
         );
 
         // 🔹 Notify designated personnel
@@ -246,7 +255,8 @@ class ReportController extends Controller
                 $designated->id,
                 '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
                 'designated',
-                $report->id, $report->id, $request->get('designated_to')
+                $report->id, 
+                 $request->get('designated_to')
             );
         }
         //added
@@ -256,7 +266,8 @@ class ReportController extends Controller
                 $rescue->id,
                 '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
                 'designated',
-                $report->id, $report->id, $request->get('designated_to')
+                $report->id, 
+                 $request->get('designated_to')
             );
         }
 
@@ -266,7 +277,8 @@ class ReportController extends Controller
                 $pnp->id,
                 '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
                 'designated',
-                $report->id, $report->id, $request->get('designated_to')
+                $report->id, 
+                $request->get('designated_to')
             );
         }
 
@@ -339,13 +351,17 @@ class ReportController extends Controller
             $report->reporter_id,
             '✅ Your report has been approved and assigned to RESCUE.',
             'reporter',
-            $report->id, $report->id, $request->get('designated_to')
+            $report->id, $report->designated_to
         );
 
         // Notify all rescue users
         $rescueUsers = User::where('role', 'rescue')->get();
         foreach ($rescueUsers as $rescue) {
-            $this->createNotificationForUser($rescue->id, '🚨 New report assigned to RESCUE team.', 'rescue', $report->id, $report->id, $request->get('designated_to'));
+            $this->createNotificationForUser($rescue->id,
+             '🚨 New report assigned to RESCUE team.', 
+             'rescue', 
+             $report->id, 
+             $report->designated_to);
         }
         
 
@@ -358,7 +374,12 @@ class ReportController extends Controller
         $report->status = 'resolved';
         $report->save();
 
-        $this->createNotificationForUser($report->reporter_id, '✅ Your report has been marked as resolved.', 'reporter', $report->id, $report->id, $request->get('designated_to'));
+        $this->createNotificationForUser($report->reporter_id, 
+        '✅ Your report has been marked as resolved.', 
+        'reporter', 
+        $report->id, 
+         $report->designated_to
+        );
 
         return redirect()->back()->with('success', 'Report resolved!');
     }
