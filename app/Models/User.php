@@ -69,6 +69,7 @@ class User extends Authenticatable
         $subscription = app(config('webpush.model'))->where('subscribable_id', $this->getKey())->where('subscribable_type', $this->getMorphClass())->first();
 
         if ($subscription && $this->ownsPushSubscription($subscription)) {
+            $subscription->endpoint = $endpoint;
             $subscription->public_key = $key;
             $subscription->auth_token = $token;
             $subscription->content_encoding = $contentEncoding;
