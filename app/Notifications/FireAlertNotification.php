@@ -76,7 +76,8 @@ class FireAlertNotification extends Notification  implements ShouldBroadcast
             ->data([
                 'notification' => $this->data,
                 'role' => $this->data->role,
-                'soundAlert' => $this->soundAlert
+                'soundAlert' => $this->soundAlert,
+                'url' => route('dashboard')
             ]);
     }
 }

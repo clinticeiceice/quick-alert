@@ -175,7 +175,7 @@ const subscribeButton = document.getElementById('enableNotifications');
         }
 
         // REPLACE WITH YOUR NEW VAPID PUBLIC KEY
-        const vapidPublicKey = 'BPRPMonD2d8BLXuTQ8z9uBC-femD2TBeWK4nODcOrgn3P9mJD8aJ5Ia7QQKDItRNITiAHZIMDZp_eEfFj754mpA';
+        const vapidPublicKey = '{{{ $vapid_public_key }}}';
         
         const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
         
@@ -518,7 +518,7 @@ async function tryAlternativeSubscription() {
 
     <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js?v=2')
+        navigator.serviceWorker.register('/service-worker.js?v=3')
             .then(() => console.log("Service Worker Registered"));
     }
     </script>

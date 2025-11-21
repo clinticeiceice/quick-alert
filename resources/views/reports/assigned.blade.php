@@ -18,6 +18,12 @@
                     @csrf
                     <button class="btn btn-primary btn-sm">Accept Report</button>
                 </form>
+                @elseif($report->status == 'accepted')
+                <form action="{{ route('reports.underControl', $report) }}" method="POST">
+                    @method('PUT')
+                    @csrf
+                    <button class="btn btn-danger btn-sm">Report Complete</button>
+                </form>
                 @else
                     <span class="badge bg-success">Accepted</span>
                 @endif

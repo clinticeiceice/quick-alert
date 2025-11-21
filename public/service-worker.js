@@ -18,6 +18,28 @@ self.addEventListener("fetch", (event) => {
     );
 });
 
+self.addEventListener("notificationclick", function (event) {
+    event.notification.close(); // Close the notification
+
+    const targetUrl = event.notification.data
+        ? event.notification.data.url
+        : "/"; // Get URL from notification data or default
+
+    event.waitUntil(
+        clients.matchAll({ type: "window" }).then(function (clientList) {
+            for (let i = 0; i < clientList.length; i++) {
+                const client = clientList[i];
+                if (client.url === targetUrl && "focus" in client) {
+                    return client.focus(); // Focus existing window
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(targetUrl); // Open new window
+            }
+        })
+    );
+});
+
 // Inside your service worker's 'push' event listener
 self.addEventListener("push", function (event) {
     console.log(event.data?.json());

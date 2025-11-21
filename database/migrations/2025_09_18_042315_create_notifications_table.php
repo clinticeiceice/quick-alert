@@ -15,11 +15,9 @@ return new class extends Migration
         $table->id();
         $table->unsignedBigInteger('user_id');
         $table->string('message');
-        $table->string('role');
+        $table->string('role')->nullable();
         $table->boolean('is_read')->default(false);
         $table->timestamps();
-        $table->string('role')->nullable()->after('message');
-        $table->boolean('is_read')->default(false)->after('role');
         $table->unsignedBigInteger('report_id')->nullable(); // Adjust as needed (e.g., foreign key)
 
         $table->softDeletes();

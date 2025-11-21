@@ -119,7 +119,7 @@ class ReportController extends Controller
         $message = '🚨 New report assigned to ' . strtoupper($report->designated_to) . ' (Level ' . $report->level . ')';
        
         foreach ($assignedUsers as $u) {
-            $this->createNotificationForUser($u->id, $message, $report->designated_to, $report->id, $request->get('designated_to'));
+            $this->createNotificationForUser($u->id, $message, $report->designated_to, $report->id, $request->get('designated_to'), true);
         }
 
         return redirect()->route('dashboard')->with('success', 'Report approved successfully.');
@@ -136,7 +136,7 @@ class ReportController extends Controller
     {
         $user = Auth::user();
         $role = $user->role; // rescue, pnp, or bfp
-
+ 
         // Update report status and who accepted it
         $report->update([
             'status' => 'accepted',
@@ -239,11 +239,20 @@ class ReportController extends Controller
             'controlled_at' => now(),
         ]);
 
+        $role = $report->designated_to;
+
+        $notificationBodyForReporter = "🔥 Your reported fire incident is now under control (Report ID:  $report->id ), reporter";
+        $notificationBodyForOther = "🚒 Fire report #$report->id is now under control (Level $report->level), ";
+
+        if($role != "bfp") {
+            $notificationBodyForReporter = "🆘 Your reported incident is now under control or completed (Report ID:  $report->id ), reporter";
+            $notificationBodyForOther = "🚨 Incident report #$report->id is now under control or completed (Level $report->level), ";
+        }
+
         // 🔹 Notify the reporter that the fire is under control
         $this->createNotificationForUser(
             $report->reporter_id,
-            '🔥 Your reported fire incident is now under control (Report ID: ' . $report->id . ')',
-            'reporter',
+            $notificationBodyForReporter,
             $report->id, 
              $request->get('designated_to')
         );
@@ -253,33 +262,48 @@ class ReportController extends Controller
         foreach ($designatedUsers as $designated) {
             $this->createNotificationForUser(
                 $designated->id,
-                '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
-                'designated',
-                $report->id, 
-                 $request->get('designated_to')
-            );
-        }
-        //added
-        $rescues = User::where('role', 'rescue')->get();
-        foreach ($rescues as $rescue) {
-            $this->createNotificationForUser(
-                $rescue->id,
-                '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
-                'designated',
+                $notificationBodyForOther . "designated",
                 $report->id, 
                  $request->get('designated_to')
             );
         }
 
-         $pnps = User::where('role', 'pnp')->get();
-        foreach ($pnps as $pnp) {
-            $this->createNotificationForUser(
-                $pnp->id,
-                '🚒 Fire report #' . $report->id . ' is now under control (Level ' . $report->level . ').',
-                'designated',
-                $report->id, 
-                $request->get('designated_to')
-            );
+        if($role != "rescue") {
+
+            //added
+            $rescues = User::where('role', 'rescue')->get();
+            foreach ($rescues as $rescue) {
+                $this->createNotificationForUser(
+                    $rescue->id,
+                    $notificationBodyForOther . "rescue",
+                    $report->id, 
+                     $request->get('designated_to')
+                );
+            }
+        }
+
+        if($role != "pnp") {
+            $pnps = User::where('role', 'pnp')->get();
+           foreach ($pnps as $pnp) {
+               $this->createNotificationForUser(
+                   $pnp->id,
+                   $notificationBodyForOther . "PNP",
+                   $report->id, 
+                   $request->get('designated_to')
+               );
+           }
+        }
+
+        if($role != "bfp") {
+            $bfps = User::where('role', 'bfp')->get();
+           foreach ($bfps as $bfp) {
+               $this->createNotificationForUser(
+                   $bfp->id,
+                   $notificationBodyForOther . "BFP",
+                   $report->id, 
+                   $request->get('designated_to')
+               );
+           }
         }
 
         return redirect()->route('dashboard')->with('success', 'Fire marked as under control.');

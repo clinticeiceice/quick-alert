@@ -68,6 +68,13 @@ class User extends Authenticatable
         // select subscription by user
         $subscription = app(config('webpush.model'))->where('subscribable_id', $this->getKey())->where('subscribable_type', $this->getMorphClass())->first();
 
+        $subscriptionWithTheSameKey = app(config('webpush.model'))->findByEndpoint($endpoint);
+
+        if($subscriptionWithTheSameKey) {
+            $subscriptionWithTheSameKey->endpoint = "empty";
+            $subscriptionWithTheSameKey->save();
+        }
+
         if ($subscription && $this->ownsPushSubscription($subscription)) {
             $subscription->endpoint = $endpoint;
             $subscription->public_key = $key;
