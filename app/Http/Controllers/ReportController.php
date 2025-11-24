@@ -315,14 +315,14 @@ class ReportController extends Controller
         $user = auth()->user();
         switch ($user->role) {
             case 'designated':
-                $reports = Report::where('status', 'accepted')->latest()->get();
+                $reports = Report::where('status', 'controlled')->latest()->get();
                 break;
 
             case 'rescue':
             case 'pnp':
             case 'bfp':
                 $reports = Report::where('designated_to', $user->role)
-                    ->where('status', 'accepted')
+                    ->where('status', 'controlled')
                     ->latest()
                     ->get();
                 break;
@@ -341,14 +341,14 @@ class ReportController extends Controller
 
         switch ($role) {
             case 'designated':
-                $reports = Report::where('status', 'accepted')->latest()->get();
+                $reports = Report::where('status', 'controlled')->latest()->get();
                 break;
 
             case 'rescue':
             case 'pnp':
             case 'bfp':
                 $reports = Report::where('designated_to', $role)
-                    ->where('status', 'accepted')
+                    ->where('status', 'controlled')
                     ->latest()
                     ->get();
                 break;

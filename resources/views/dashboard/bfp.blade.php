@@ -32,7 +32,6 @@
                             <tr>
                                 <th>#</th>
                                 <th>Reporter</th>
-                                <th>Location</th>
                                 <th>Description</th>
                                 <th>Status</th>
                                 <th>Date Reported</th>
@@ -44,7 +43,6 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $report->reporter->name ?? 'N/A' }}</td>
-                                    <td>{{ $report->location ?? 'Unknown' }}</td>
                                     <td>{{ $report->description ?? 'No description' }}</td>
                                     <td class="text-center">
                                         @switch($report->status)
