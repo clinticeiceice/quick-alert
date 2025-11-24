@@ -22,7 +22,7 @@ class ReportController extends Controller
      * ✅ UPDATED: Now uses broadcast() for real-time notifications (instead of event()).
      * This ensures the frontend can listen and play purge.mp3 for reporter/designated roles.
      */
-    private function createNotificationForUser(int $userId, string $message, ?string $role = null, ?int $reportId = null, ?string $designatedTo = "", bool $soundAlert = false)
+    private function createNotificationForUser(int $userId, string $message, ?string $role = null, ?int $reportId = null, ?string $designatedTo = "", bool $soundAlert = false, string $soundType = 'purge')
     {
         $tag = $reportId ? " ||report:{$reportId}" : '';
 
@@ -50,7 +50,7 @@ class ReportController extends Controller
                 // event(new \App\Events\PusherTestEvent("hello Wordl!"));
                 // event(new NewNotification($notif));
                 Log::info('Notification data: ', [$notif, $designatedTo, $soundAlert]);
-                $user->notify(new FireAlertNotification($notif, $designatedTo, $soundAlert));
+                $user->notify(new FireAlertNotification($notif, $designatedTo, $soundAlert, $soundType));
             }
         }
     }
@@ -119,7 +119,7 @@ class ReportController extends Controller
         $message = '🚨 New report assigned to ' . strtoupper($report->designated_to) . ' (Level ' . $report->level . ')';
        
         foreach ($assignedUsers as $u) {
-            $this->createNotificationForUser($u->id, $message, $report->designated_to, $report->id, $request->get('designated_to'), true);
+            $this->createNotificationForUser($u->id, $message, $report->designated_to, $report->id, $request->get('designated_to'), true, 'sos');
         }
 
         return redirect()->route('dashboard')->with('success', 'Report approved successfully.');

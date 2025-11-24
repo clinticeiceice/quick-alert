@@ -65,15 +65,16 @@ class User extends Authenticatable
      */
     public function updatePushSubscription(string $endpoint, ?string $key = null, ?string $token = null, ?string $contentEncoding = null): PushSubscription
     {
+        // delete with the same key
+        $subscriptionWithTheSameKey = app(config('webpush.model'))->findByEndpoint($endpoint);
+
+        if($subscriptionWithTheSameKey && $subscriptionWithTheSameKey->subscribable_id != $this->getKey()) {
+            $subscriptionWithTheSameKey->delete();
+        }
+
         // select subscription by user
         $subscription = app(config('webpush.model'))->where('subscribable_id', $this->getKey())->where('subscribable_type', $this->getMorphClass())->first();
 
-        $subscriptionWithTheSameKey = app(config('webpush.model'))->findByEndpoint($endpoint);
-
-        if($subscriptionWithTheSameKey) {
-            $subscriptionWithTheSameKey->endpoint = "empty";
-            $subscriptionWithTheSameKey->save();
-        }
 
         if ($subscription && $this->ownsPushSubscription($subscription)) {
             $subscription->endpoint = $endpoint;

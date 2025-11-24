@@ -109,6 +109,7 @@ function markNotificationsRead() {
 
 <!-- Siren Sound -->
 <audio id="sirenSound" src="{{ asset('sounds/purge.mp3') }}" preload="auto"></audio>
+<audio id="sosSound" src="{{ asset('sounds/sos.mp3') }}" preload="auto" autoplay muted></audio>
 
 <script>
     
@@ -290,37 +291,11 @@ async function tryAlternativeSubscription() {
         });
     }
 
-    if (userId) {
-        // keep your Echo listener here — it does not affect dropdown clickability
-        window.Echo.private(`user.${userId}`)
-            .listen("NewNotification", (e) => {
-
-                if (e.role === 'reporter' || e.role === 'designated' || e.role === 'rescue' || e.role === 'pnp') {
-                    if (Notification.permission === "granted") {
-                        new Notification("New Message", {
-                            body: e.notification.message,
-                        });
-                    }
-                }
-
-                // // show a quick alert (you may remove alert if you prefer UI-only)
-                // alert(e.notification.message);
-
-                // // Play siren sound
-                // const siren = document.getElementById("sirenSound");
-                // siren.currentTime = 0; // restart sound
-                // siren.play().catch(err => {
-                //     console.log("⚠️ Autoplay blocked, waiting for user interaction", err);
-                // });
-            });
-    }
-
-
-
-
-     let audioCtx;
+    let audioCtx;
     let audioBuffer;
     let audioUnlocked = false;
+
+    const myAudio = document.getElementById('sosSound');
 
     // Create and unlock AudioContext on user gesture
     async function unlockAudio() {
@@ -332,26 +307,36 @@ async function tryAlternativeSubscription() {
             await audioCtx.resume();
         }
 
-        if (!audioUnlocked) {
-            await loadSound("/sounds/purge.mp3");
-            audioUnlocked = true;
-            console.log("🔓 Audio context unlocked & sound loaded");
-        }
+        // if (!audioUnlocked) {
+        //     await loadSound("/sounds/purge.mp3");
+        //     await loadSound("/sounds/sos.mp3");
+        //     audioUnlocked = true;
+        //     console.log("🔓 Audio context unlocked & sound loaded");
+        // }
     }
 
     // Fetch and decode the audio file into a buffer
     async function loadSound(url) {
+       await unlockAudio();
+
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
         audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        }
+    }
 
         // Play the sound
-        function playSound() {
+    async function playSound(audioSource) {
+        await loadSound(audioSource);
+        console.log('Playing notification sound!');
+
+
         if (!audioUnlocked || !audioBuffer) {
             console.warn("Audio not unlocked or buffer not loaded");
             return;
         }
+
+        
+        
 
         const source = audioCtx.createBufferSource();
         source.buffer = audioBuffer;
@@ -375,11 +360,14 @@ async function tryAlternativeSubscription() {
     });
 
     // Listen for service worker messages
-    navigator.serviceWorker.addEventListener("message", (event) => {
-        if (event.data?.type === "PLAY_SOUND") {
-            playSound();
-        }
-    });
+    // navigator.serviceWorker.addEventListener("message", (event) => {
+    //     if (event.data?.type === "PLAY_SOUND") {
+    //         myAudio.src=event.data?.sound;
+    //         myAudio.load();
+    //         myAudio.play();   
+    //         // playSound(event.data?.sound);
+    //     }
+    // });
 
 
 

@@ -16,12 +16,14 @@ class FireAlertNotification extends Notification  implements ShouldBroadcast
     protected $data;
     protected $designatedTo;
     protected $soundAlert;
+    protected $soundType;
 
-    public function __construct($data, $designatedTo, $soundAlert)
+    public function __construct($data, $designatedTo, $soundAlert, $soundType)
     {
         $this->data = $data;
         $this->designatedTo = $designatedTo;
         $this->soundAlert = $soundAlert;
+        $this->soundType = $soundType;
     }
 
     public function via($notifiable)
@@ -77,7 +79,8 @@ class FireAlertNotification extends Notification  implements ShouldBroadcast
                 'notification' => $this->data,
                 'role' => $this->data->role,
                 'soundAlert' => $this->soundAlert,
-                'url' => route('dashboard')
+                'url' => route('dashboard'),
+                'soundType' => $this->soundType,
             ]);
     }
 }
