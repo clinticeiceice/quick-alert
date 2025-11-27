@@ -71,7 +71,7 @@
     <form action="{{ route('reports.approve.store', $report) }}" method="POST">
         @csrf
         <button type="submit" class="btn-glass">Yes, Approve</button>
-        <a href="{{ route('reports.index') }}" class="btn-glass cancel">Cancel</a>
+        <a href="{{ route('dashboard') }}" class="btn-glass cancel">Cancel</a>
     </form>
 </div>
 @endsection

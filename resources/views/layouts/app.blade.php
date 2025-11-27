@@ -49,14 +49,14 @@
         }
 
         .glass-navbar .nav-link {
-            color: #f1f1f1 !important;
+            color: #0d0d0d !important;
             font-weight: 500;
             transition: all 0.3s ease;
         }
 
         .glass-navbar .nav-link:hover {
-            color: #fff !important;
-            text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+            color: #0d0d0d !important;
+            text-shadow: 0 0 6px rgba(19, 19, 19, 0.8);
         }
 
         .glass-navbar .btn-outline-light {
@@ -81,6 +81,107 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
+        .glass-navbar {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s ease;
+}
+
+/* Navbar brand styling */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.3rem;
+    color: #090909;
+}
+
+/* Nav links styling */
+.nav-link {
+    color: #c0b1b1 !important;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: #ffd700 !important; /* Gold hover color */
+}
+
+/* Toggler button icon */
+.navbar-toggler {
+    border: none;
+    outline: none;
+}
+
+/* Fix toggler icon color for dark backgrounds */
+.navbar-light .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' " +
+        "xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 255, 255, 1%29' " +
+        "stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/ %3E%3C/svg%3E");
+}
+
+/* Ensure collapse stays visible when toggled */
+.navbar-collapse.show {
+    display: block !important;
+}
+
+/* Dropdown menu styling */
+.dropdown-menu {
+    background: rgba(223, 218, 218, 0.95);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Dropdown item hover effect */
+.dropdown-item:hover {
+    background-color: rgba(255, 215, 0, 0.2);
+    color: #000 !important;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.7rem;
+}
+
+#notificationDropdown + .dropdown-menu {
+    min-width: auto !important; /* remove fixed width */
+    max-width: 90vw;            /* 90% of viewport width */
+    right: 5px;
+    left: auto;
+    word-wrap: break-word;      /* wrap long messages */
+    white-space: normal;        /* allow wrapping */
+}
+.dropdown-item {
+    white-space: normal !important; /* allow multi-line messages */
+    overflow-wrap: break-word;
+}
+.dropdown-menu form {
+    margin: 0.5rem 0 0 0;
+}
+.dropdown-menu button {
+    width: 100%; /* full width button */
+    text-align: center;
+}
+
+
+/* On very small screens, make it fixed */
+@media (max-width: 576px) {
+    #notificationDropdown + .dropdown-menu {
+        position: fixed !important; 
+        top: 60px; /* below navbar */
+        right: 5px;
+        left: 5px;
+        width: auto !important;
+        max-width: calc(100% - 10px);
+        z-index: 1050;
+        max-height: 60vh;  /* scrollable */
+        overflow-y: auto;
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+}
+
     </style>
 </head>
 
@@ -384,96 +485,97 @@ async function tryAlternativeSubscription() {
 
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg glass-navbar fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url('/') }}">
-                🚨 Quick Alert
-            </a>
+    <div class="container">
 
-            <div class="d-flex justify-content-end align-items-center" id="navbarNav">
+        <!-- Brand -->
+        <a class="navbar-brand" href="{{ url('/') }}">
+            🚨 Quick Alert
+        </a>
 
-                <!-- Install App Button -->
-                <div class="nav-item me-2">
-                    <button id="installAppBtn" class="btn btn-install d-none">📲 Install App</button>
-                </div>
-                
-                <button id="enable-sound" class="btn btn-install d-none">🔊 Enable Sound Alerts</button>
+        <!-- Proper Bootstrap Toggler -->
+        {{-- <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+    <span class="navbar-toggler-icon"></span>
+</button> --}}
 
-                <button id="enableNotifications" class="btn btn-install" style="display: none">
-    🚨 Enable Push Notifications
-</button>
-                @guest
-                    <a class="nav-link text-white me-3" href="{{ route('login') }}">Login</a>
-                    <a class="nav-link text-white me-3" href="{{ route('register') }}">Register</a>
-                @else
-                    <!-- ********* FIXED NOTIFICATION DROPDOWN *********
-                         Changes made:
-                         1) Replaced invalid <a class="nav-item dropdown"> wrapper with <div class="nav-item dropdown"> to avoid nested anchors.
-                         2) Ensured dropdown toggle is an <a> with data-bs-toggle="dropdown".
-                         3) Used proper </div> closing (removed the stray </l>).
-                         4) Each notification list item is an <a class="dropdown-item"> so clicks behave correctly.
-                    -->
-                    <div class="nav-item dropdown">
-                        <a 
-                            class="nav-link dropdown-toggle position-relative text-white" 
-                            href="#" 
-                            id="notificationDropdown" 
-                            role="button" 
-                            data-bs-toggle="dropdown" 
-                            aria-expanded="false"
-                            onclick="markNotificationsRead()"   
-                        >
-                        
-                            🔔
-                            @php
-                                $unreadCount = \App\Models\Notification::where('user_id', Auth::id())
-                                                ->where('is_read', false)
-                                                ->count();
-                            @endphp
-                            @if($unreadCount > 0)
-                                <span id="notifCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                                    {{ $unreadCount }}
-                                </span>
-                            @endif
-                        </a>
+        <!-- COLLAPSIBLE CONTENT -->
+        <div class="navbar-collapse justify-content-end" id="mainNavbar">
 
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="min-width:280px;">
-                            @forelse(\App\Models\Notification::where('user_id', Auth::id())->orderBy('created_at','desc')->take(5)->get() as $notif)
-                                <li>
-                                    <!-- make each item clickable (change href to actual route if you have one) -->
-                                    <a href="#" class="dropdown-item {{ $notif->is_read ? '' : 'fw-bold' }}">
-                                        {{ $notif->message }}
-                                    </a>
-                                </li>
-                            @empty
-                                <li><a class="dropdown-item">No notifications</a></li>
-                            @endforelse
+            <!-- Install Buttons -->
+            <button id="installAppBtn" class="btn btn-install d-none me-2">📲 Install App</button>
+            <button id="enable-sound" class="btn btn-install d-none me-2">🔊 Enable Sound Alerts</button>
+            <button id="enableNotifications" class="btn btn-install me-2" style="display:none">
+                🚨 Enable Push Notifications
+            </button>
 
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form action="{{ route('notifications.markAllRead') }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-center">
-                                        ✅ Mark All as Read
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                    <!-- ********* END FIX ********* -->
+            @guest
+                <a class="nav-link text-black me-3" href="{{ route('login') }}">Login</a>
+                <a class="nav-link text-black me-3" href="{{ route('register') }}">Register</a>
+            @else
 
-                    <!-- User Greeting + Logout -->
-                    <span class="text-white ms-3">👋 Hello, {{ Auth::user()->name }}</span>
-                    <a class="btn btn-outline-light btn-sm ms-3" href="{{ route('logout') }}"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        Logout
+                <!-- NOTIFICATION DROPDOWN -->
+                <div class="nav-item dropdown me-3">
+                    <a class="nav-link dropdown-toggle position-relative text-white"
+                       href="#" id="notificationDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false"
+                       onclick="markNotificationsRead()">
+
+                        🔔
+                        @php
+                            $unreadCount = \App\Models\Notification::where('user_id', Auth::id())
+                                            ->where('is_read', false)
+                                            ->count();
+                        @endphp
+
+                        @if($unreadCount > 0)
+                            <span id="notifCount"
+                                  class="badge bg-danger position-left top-0 start-100 translate-middle">
+                                {{ $unreadCount }}
+                            </span>
+                        @endif
                     </a>
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                        @csrf
-                    </form>
-                @endguest
-            </div>
+
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-mobile" aria-labelledby="notificationDropdown">
+                        @forelse(\App\Models\Notification::where('user_id', Auth::id())->orderBy('created_at','desc')->take(5)->get() as $notif)
+                            <li>
+                                <a href="#" class="dropdown-item {{ $notif->is_read ? '' : 'fw-bold' }}">
+                                    {{ $notif->message }}
+                                </a>
+                            </li>
+                        @empty
+                            <li><a class="dropdown-item">No notifications</a></li>
+                        @endforelse
+
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{{ route('notifications.markAllRead') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-center">✅ Mark All as Read</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- USER & LOGOUT -->
+                <span class="text-black me-3">👋 Hello, {{ Auth::user()->name }}</span>
+
+                <a class="d-flex btn  btn-sm justify-end" href="{{ route('logout') }}"
+                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    Logout
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
+            @endguest
+
         </div>
-    </nav>
+    </div>
+</nav>
+<script>
+document.getElementById('customNavbarToggler').addEventListener('click', function() {
+    const navbar = document.getElementById('mainNavbar');
+    navbar.classList.toggle('show'); // This adds/removes the 'show' class
+});
+</script>
 
     <script>
         let deferredPrompt;

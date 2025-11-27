@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="glass-card">
-    <h2 class="mb-3">📑 Generated Report</h2>
+    <h2 class="mt-5">📑 Generated Report</h2>
 
     @if($reports->isEmpty())
         <p class="text-center">No accepted reports found.</p>
@@ -10,8 +10,8 @@
         <div class="table-responsive table-glass">
             <table class="table table-bordered table-hover mb-0 text-white">
                 <a href="{{ route('reports.generate.pdf') }}" class="btn btn-danger">
-    Download PDF Report
-</a>
+                    Download PDF Report
+                 </a>
 
                 <thead>
                     <tr>

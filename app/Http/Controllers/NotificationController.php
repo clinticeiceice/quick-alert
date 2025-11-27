@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Events\NewNotification;
 use Illuminate\Support\Facades\Auth;
 
+
 class NotificationController extends Controller
 {
     /**
