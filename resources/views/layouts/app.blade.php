@@ -592,7 +592,7 @@ document.getElementById('customNavbarToggler').addEventListener('click', functio
 
     <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js?v=3')
+        navigator.serviceWorker.register('/service-worker.js?v=4')
             .then(() => console.log("Service Worker Registered"));
     }
     </script>
