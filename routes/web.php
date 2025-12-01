@@ -62,8 +62,10 @@ Route::post('/notifications/{reportId}/mark-as-controlled', [NotificationControl
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
 
     Route::get('/reports/{report}/approve', [ReportController::class, 'approve'])->name('reports.approve');
+    Route::get('/reports/{report}/decline', [ReportController::class, 'decline'])->name('reports.decline');
     Route::post('/reports/{report}/approve', [ReportController::class, 'approveStore'])->name('reports.approve.store');
-
+    Route::post('/reports/{report}/decline', [ReportController::class, 'declineStore'])->name('reports.decline.store');
+    
     Route::post('/reports/{report}/accept', [ReportController::class, 'accept'])->name('reports.accept');
     Route::post('/reports/{id}/accept', [ReportController::class, 'accept'])->name('reports.accept');
     Route::put('/reports/{report}/under-control', [ReportController::class, 'markUnderControl'])->name('reports.underControl');
@@ -76,6 +78,11 @@ Route::post('/notifications/{reportId}/mark-as-controlled', [NotificationControl
     ->name('notifications.destroy');    
     Route::post('/notifications/{id}/mark-as-controlled', [NotificationController::class, 'markAsControlled'])->name('notifications.markAsControlled');
     
+
+    // profile
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/delete', [ProfileController::class, 'delete'])->name('profile.delete');
 });
 
 // Public Routes (login/register)

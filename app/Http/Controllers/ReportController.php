@@ -107,6 +107,11 @@ class ReportController extends Controller
         return view('reports.approve', compact('report'));
     }
 
+    public function decline(Report $report)
+    {
+        return view('reports.decline', compact('report'));
+    }
+
     public function approveStore(Request $request, Report $report)
     {
         $report->update([
@@ -123,6 +128,21 @@ class ReportController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Report approved successfully.');
+    }
+
+
+    public function declineStore(Request $request, Report $report)
+    {
+        $report->update([
+            'status'      => 'declined',
+            'approved_by' => Auth::id(),
+        ]);
+
+        $message = '🚨 Your report has been declined!';
+        $this->createNotificationForUser($report->reporter_id, $message, 'reporter', $report->id, $request->get('designated_to'), false, 'sos');
+      
+    
+        return redirect()->route('dashboard')->with('success', 'Report declined successfully.');
     }
 
     /**
@@ -253,6 +273,7 @@ class ReportController extends Controller
         $this->createNotificationForUser(
             $report->reporter_id,
             $notificationBodyForReporter,
+            'reporter',
             $report->id, 
              $request->get('designated_to')
         );
@@ -263,48 +284,61 @@ class ReportController extends Controller
             $this->createNotificationForUser(
                 $designated->id,
                 $notificationBodyForOther . "designated",
+                'designated',
                 $report->id, 
                  $request->get('designated_to')
             );
         }
 
-        if($role != "rescue") {
+        if($role == "bfp") {
 
             //added
+            $rescues = User::where('role', 'reporter')->whereNot('id', $report->reporter_id)->get();
+            foreach ($rescues as $rescue) {
+                $this->createNotificationForUser(
+                    $rescue->id,
+                    $notificationBodyForReporter,
+                    'reporter',
+                    $report->id, 
+                     $request->get('designated_to')
+                );
+            }
+
             $rescues = User::where('role', 'rescue')->get();
             foreach ($rescues as $rescue) {
                 $this->createNotificationForUser(
                     $rescue->id,
                     $notificationBodyForOther . "rescue",
+                    'rescue',
                     $report->id, 
                      $request->get('designated_to')
                 );
             }
-        }
 
-        if($role != "pnp") {
             $pnps = User::where('role', 'pnp')->get();
-           foreach ($pnps as $pnp) {
+            foreach ($pnps as $pnp) {
                $this->createNotificationForUser(
                    $pnp->id,
                    $notificationBodyForOther . "PNP",
+                   'pnp',
                    $report->id, 
                    $request->get('designated_to')
                );
-           }
+            }
         }
 
-        if($role != "bfp") {
-            $bfps = User::where('role', 'bfp')->get();
-           foreach ($bfps as $bfp) {
-               $this->createNotificationForUser(
-                   $bfp->id,
-                   $notificationBodyForOther . "BFP",
-                   $report->id, 
-                   $request->get('designated_to')
-               );
-           }
-        }
+        // if($role != "bfp" && $role != "rescue" && $role != "pnp") {
+        //     $bfps = User::where('role', 'bfp')->get();
+        //    foreach ($bfps as $bfp) {
+        //        $this->createNotificationForUser(
+        //            $bfp->id,
+        //            $notificationBodyForOther . "BFP",
+        //            'bfp',
+        //            $report->id, 
+        //            $request->get('designated_to')
+        //        );
+        //    }
+        // }
 
         return redirect()->route('dashboard')->with('success', 'Fire marked as under control.');
     }

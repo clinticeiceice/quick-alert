@@ -6,37 +6,42 @@ use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): View
+    public function edit()
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
+        return view('profile.edit');
+    }
+
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+        
+       $validated = $request->validate([
+            'name'            => ['required', 'string'],
+            'email'           => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone_number'    => ['required', 'digits:11'],
+            'current_password'=> ['nullable', 'required_with:password', 'current_password:web'],
+            'password'        => ['nullable', 'min:8', 'confirmed'],
         ]);
-    }
-
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->phone_number = $validated['phone_number'];
+        
+        if ($request->filled('password')) {
+            $user->password = Hash::make($validated['password']);
         }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        
+        $user->save();
+        
+        return back()->with('success', 'Profile updated successfully!');
     }
-
     /**
      * Delete the user's account.
      */

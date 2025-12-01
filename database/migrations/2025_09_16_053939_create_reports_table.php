@@ -16,7 +16,7 @@ return new class extends Migration
         $table->foreignId('reporter_id')->constrained('users')->onDelete('cascade');
         $table->enum('level', ['1', '2', '3']);
         $table->text('description')->nullable();
-        $table->enum('status', ['pending', 'approved', 'accepted'])->default('pending');
+        $table->enum('status', ['pending', 'approved', 'accepted', 'declined'])->default('pending');
         $table->enum('designated_to', ['rescue', 'pnp', 'bfp']);
         $table->timestamp('reported_at')->useCurrent();
         $table->timestamps();

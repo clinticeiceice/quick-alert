@@ -146,6 +146,7 @@
                     <td>
     <a href="{{ route('reports.show', $report) }}" class="btn btn-glass btn-sm me-2">View</a>
     <a href="{{ route('reports.approve', $report) }}" class="btn btn-glass btn-sm">Approve</a>
+    <a href="{{ route('reports.decline', $report) }}" class="btn btn-glass btn-sm">Decline</a>
 </td>
                 </tr>
                 @endforeach

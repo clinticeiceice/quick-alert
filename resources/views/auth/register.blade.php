@@ -50,15 +50,10 @@
 
 <!-- Role -->
 <div class="mb-3">
-    <label for="role" class="form-label fw-bold text-black">Select Role</label>
+    <label for="role" class="form-label fw-bold text-black">Role</label>
     <select name="role" id="role" 
             class="form-select form-select-sm rounded-pill @error('role') is-invalid @enderror" required>
-        <option value="">-- Choose Role --</option>
         <option value="reporter" {{ old('role') == 'reporter' ? 'selected' : '' }}>Reporter</option>
-        <option value="designated" {{ old('role') == 'designated' ? 'selected' : '' }}>Designated Personnel</option>
-        <option value="rescue" {{ old('role') == 'rescue' ? 'selected' : '' }}>Rescue</option>
-        <option value="pnp" {{ old('role') == 'pnp' ? 'selected' : '' }}>PNP</option>
-        <option value="bfp" {{ old('role') == 'bfp' ? 'selected' : '' }}>BFP</option>
     </select>
     @error('role')
         <div class="invalid-feedback">{{ $message }}</div>

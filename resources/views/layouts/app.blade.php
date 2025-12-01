@@ -436,9 +436,6 @@ async function tryAlternativeSubscription() {
             return;
         }
 
-        
-        
-
         const source = audioCtx.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioCtx.destination);
@@ -459,19 +456,6 @@ async function tryAlternativeSubscription() {
         await unlockAudio();
         document.getElementById("enable-sound").textContent = "✅ Sound Enabled";
     });
-
-    // Listen for service worker messages
-    // navigator.serviceWorker.addEventListener("message", (event) => {
-    //     if (event.data?.type === "PLAY_SOUND") {
-    //         myAudio.src=event.data?.sound;
-    //         myAudio.load();
-    //         myAudio.play();   
-    //         // playSound(event.data?.sound);
-    //     }
-    // });
-
-
-
 
 });
 
@@ -556,7 +540,7 @@ async function tryAlternativeSubscription() {
                 </div>
 
                 <!-- USER & LOGOUT -->
-                <span class="text-black me-3">👋 Hello, {{ Auth::user()->name }}</span>
+                <a href="{{ route('profile.edit') }}"><span class="text-black me-3">👋 Hello, {{ Auth::user()->name }}</span></a>
 
                 <a class="d-flex btn  btn-sm justify-end" href="{{ route('logout') }}"
                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
