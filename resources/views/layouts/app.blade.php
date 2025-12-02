@@ -209,7 +209,7 @@ function markNotificationsRead() {
 </script>
 
 <!-- Siren Sound -->
-<audio id="sirenSound" src="{{ asset('sounds/purge.mp3') }}" preload="auto"></audio>
+<audio id="sirenSound" src="{{ asset('sounds/purge.mp3') }}" preload="auto" autoplay muted></audio>
 <audio id="sosSound" src="{{ asset('sounds/sos.mp3') }}" preload="auto" autoplay muted></audio>
 
 <script>
