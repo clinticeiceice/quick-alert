@@ -392,70 +392,70 @@ async function tryAlternativeSubscription() {
         });
     }
 
-    let audioCtx;
-    let audioBuffer;
-    let audioUnlocked = false;
+    // let audioCtx;
+    // let audioBuffer;
+    // let audioUnlocked = false;
 
-    const myAudio = document.getElementById('sosSound');
+    // const myAudio = document.getElementById('sosSound');
 
-    // Create and unlock AudioContext on user gesture
-    async function unlockAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
+    // // Create and unlock AudioContext on user gesture
+    // async function unlockAudio() {
+    //     if (!audioCtx) {
+    //         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    //     }
 
-        if (audioCtx.state === "suspended") {
-            await audioCtx.resume();
-        }
+    //     if (audioCtx.state === "suspended") {
+    //         await audioCtx.resume();
+    //     }
 
-        // if (!audioUnlocked) {
-        //     await loadSound("/sounds/purge.mp3");
-        //     await loadSound("/sounds/sos.mp3");
-        //     audioUnlocked = true;
-        //     console.log("🔓 Audio context unlocked & sound loaded");
-        // }
-    }
+    //     // if (!audioUnlocked) {
+    //     //     await loadSound("/sounds/purge.mp3");
+    //     //     await loadSound("/sounds/sos.mp3");
+    //     //     audioUnlocked = true;
+    //     //     console.log("🔓 Audio context unlocked & sound loaded");
+    //     // }
+    // }
 
-    // Fetch and decode the audio file into a buffer
-    async function loadSound(url) {
-       await unlockAudio();
+    // // Fetch and decode the audio file into a buffer
+    // async function loadSound(url) {
+    //    await unlockAudio();
 
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    }
+    //     const response = await fetch(url);
+    //     const arrayBuffer = await response.arrayBuffer();
+    //     audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    // }
 
-        // Play the sound
-    async function playSound(audioSource) {
-        await loadSound(audioSource);
-        console.log('Playing notification sound!');
+    //     // Play the sound
+    // async function playSound(audioSource) {
+    //     await loadSound(audioSource);
+    //     console.log('Playing notification sound!');
 
 
-        if (!audioUnlocked || !audioBuffer) {
-            console.warn("Audio not unlocked or buffer not loaded");
-            return;
-        }
+    //     if (!audioUnlocked || !audioBuffer) {
+    //         console.warn("Audio not unlocked or buffer not loaded");
+    //         return;
+    //     }
 
-        const source = audioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
-    }
+    //     const source = audioCtx.createBufferSource();
+    //     source.buffer = audioBuffer;
+    //     source.connect(audioCtx.destination);
+    //     source.start(0);
+    // }
 
-    if (!audioUnlocked) {
-        (async () => {
-            await unlockAudio();
-        })
-        document.getElementById("enable-sound").style.display = 'block';
-    }else {
-        document.getElementById("enable-sound").style.display = 'none';
-    }
+    // if (!audioUnlocked) {
+    //     (async () => {
+    //         await unlockAudio();
+    //     })
+    //     document.getElementById("enable-sound").style.display = 'block';
+    // }else {
+    //     document.getElementById("enable-sound").style.display = 'none';
+    // }
 
-    // Handle user click to unlock
-    document.getElementById("enable-sound").addEventListener("click", async () => {
-        await unlockAudio();
-        document.getElementById("enable-sound").textContent = "✅ Sound Enabled";
-    });
+    // // Handle user click to unlock
+    // document.getElementById("enable-sound").addEventListener("click", async () => {
+    //     await unlockAudio();
+    //     document.getElementById("enable-sound").textContent = "✅ Sound Enabled";
+    // });
 
 });
 
