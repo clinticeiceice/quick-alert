@@ -202,6 +202,19 @@ class ReportController extends Controller
                 true
             );
 
+            // all reporter
+            $reporterUsers = User::where('role', 'reporter')->whereNot('id', $report->reporter_id)->get();
+            foreach ($reporterUsers as $reporters) {
+                $this->createNotificationForUser(
+                    $reporters->id,
+                    '🔥 BFP confirmed fire (Level ' . $report->level . ').',
+                    'reporters',
+                    $report->id, 
+                    $request->get('designated_to'),
+                    true
+                );
+            }
+
             $designatedUsers = User::where('role', 'designated')->get();
             foreach ($designatedUsers as $designated) {
                 $this->createNotificationForUser(
@@ -294,6 +307,7 @@ class ReportController extends Controller
 
             //added
             $rescues = User::where('role', 'reporter')->whereNot('id', $report->reporter_id)->get();
+            $notificationBodyForReporter = "🔥 The reported fire incident is now under control (Report ID:  $report->id ), reporter";
             foreach ($rescues as $rescue) {
                 $this->createNotificationForUser(
                     $rescue->id,
