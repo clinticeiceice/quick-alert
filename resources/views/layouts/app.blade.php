@@ -596,5 +596,7 @@ document.getElementById('customNavbarToggler').addEventListener('click', functio
             .then(() => console.log("Service Worker Registered"));
     }
     </script>
+
+    @yield('scripts')
 </body>
 </html>

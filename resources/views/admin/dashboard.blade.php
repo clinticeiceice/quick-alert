@@ -11,36 +11,48 @@
    
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ $totalUsers }}</h5>
-                    <p class="card-text small">Total Users</p>
+            <a href="{{ route('admin.list') }}">
+            
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $totalUsers }}</h5>
+                        <p class="card-text small">Total Users</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ $reporters }}</h5>
-                    <p class="card-text small">Reporters</p>
+            <a href="{{ route('admin.list', ['filter' => 'reporter']) }}">
+
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $reporters }}</h5>
+                        <p class="card-text small">Reporters</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ $designated }}</h5>
-                    <p class="card-text small">Designated</p>
+            <a href="{{ route('admin.list', ['filter' => 'designated']) }}">
+
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $designated }}</h5>
+                        <p class="card-text small">Designated</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ $pending }}</h5>
-                    <p class="card-text small">Pending Approval</p>
+            <a href="{{ route('admin.pending') }}">
+
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $pending }}</h5>
+                        <p class="card-text small">Pending Approval</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 

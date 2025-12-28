@@ -27,6 +27,16 @@ class AdminController extends Controller
         return view('admin.pending', compact('users'));
     }
 
+    public function list(Request $request)
+    {
+        $users = User::when($request->has('filter'), function ($query) use($request){
+            $query->where('role', $request->get('filter'));
+        })
+            ->paginate(10);
+
+        return view('admin.list', compact('users'));
+    }
+
     public function approve(User $user)
     {
         $user->update(['is_approved' => true]);

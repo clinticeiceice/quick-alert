@@ -65,15 +65,23 @@ class ReportController extends Controller
         // Validate input
         $request->validate([
             'level' => 'required|in:1,2,3',
-            'description' => 'required|string',
+            'description' => 'required_if:report_type,Others',
+            'report_type' => 'required|string',
             'designated_to' => 'required|in:rescue,pnp,bfp',
         ]);
+
+        // verify report type
+        if($this->verifyReportType($request->get('designated_to'), $request->get('report_type'))){
+            $reportType = $request->report_type == 'Others' ? $request->report_type . ': ' .$request->description : $request->report_type;
+        }else {
+            $reportType =  'Others: ' . $request->report_type ;
+        }
 
         // Save the report and set reporter_id
         $report = Report::create([
             'reporter_id'   => auth()->id(),
             'level'         => $request->level,
-            'description'   => $request->description,
+            'description'   => $reportType,
             'status'        => 'pending',
             'designated_to' => $request->designated_to,
             'reported_at'   => now(),
@@ -454,5 +462,58 @@ class ReportController extends Controller
         );
 
         return redirect()->back()->with('success', 'Report resolved!');
+    }
+
+    /**
+     * Returns true if the report type is valid for the designated personnel.
+     * @param mixed $designatedTo
+     * @param mixed $reportType
+     * @return void
+     */
+    private function verifyReportType($designatedTo, $reportType) : bool
+    {
+        $reportTypes = [
+            'pnp' => [
+                'Robbery or theft',
+                'Physical assault or street fight',
+                'Domestic violence',
+                'Gun-related incident',
+                'Suspicious person or activity',
+                'Missing person report',
+                'Drug-related incident',
+                'Traffic accident needing police assistance',
+                'Vandalism or property damage',
+                'Bomb threat or suspicious package',
+                'Others'
+            ],
+            'rescue' => [
+                'Sudden flooding',
+                'Strong earthquake',
+                'Landslide occurrence',
+                'Typhoon-related emergencies',
+                'Flash floods',
+                'Building collapse due to disaster',
+                'Trapped or injured victims',
+                'Fire spreading due to strong winds',
+                'Road blockage affecting evacuation',
+                'Others'
+            ],
+            'bfp' => [
+                'Structural or residential fire',
+                'Electrical fire',
+                'Grass or forest fire',
+                'Gas leak or explosion',
+                'Vehicle fire',
+                'Rescue from burning buildings',
+                'Fire alarm response',
+                'Industrial or chemical fire',
+                'Fire safety inspection',
+                'Fire-related medical emergency',
+                'Others'
+            ]
+        ];
+
+
+        return in_array($reportType, $reportTypes[$designatedTo]);
     }
 }

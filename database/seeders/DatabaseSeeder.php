@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'designated',
             'phone_number' => '09123456789',
+            'is_approved' => 1,
         ]);
 
         //PNP
@@ -35,6 +36,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'pnp',
             'phone_number' => '09123456789',
+            'is_approved' => 1,
         ]);
 
         // Rescue
@@ -46,6 +48,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'rescue',
             'phone_number' => '09123456789',
+            'is_approved' => 1,
         ]);
 
         // BFP
@@ -57,6 +60,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'bfp',
             'phone_number' => '09123456789',
+            'is_approved' => 1,
         ]);
     }
 }

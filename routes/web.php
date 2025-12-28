@@ -18,6 +18,7 @@ Route::get('/', function () {
 });
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/list', [AdminController::class, 'list'])->name('admin.list');
     Route::get('/admin/pending', [AdminController::class, 'pending'])->name('admin.pending');
     Route::post('/admin/approve/{user}', [AdminController::class, 'approve'])->name('admin.approve');
     Route::get('/admin/create-user', [AdminController::class, 'create'])->name('admin.create');

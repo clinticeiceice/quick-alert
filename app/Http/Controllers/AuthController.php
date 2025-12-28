@@ -38,9 +38,17 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Account created successfully!');
+        // by default, user is not approved and is pending approval. 
+        // The user should be approved by the admin before they can login.
+
+        // redirect to login page
+
+        return redirect()->route('login')->with('success', 'Account created successfully! Please wait for approval.');
+        
+        // Auth::login($user);
+
+        // return redirect()->route('dashboard')->with('success', 'Account created successfully!');
     }
 
     // Show Login Form

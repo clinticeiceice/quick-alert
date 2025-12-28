@@ -62,6 +62,21 @@
 
     <form action="{{ route('reports.store') }}" method="POST">
         @csrf
+        @if($errors->any())
+    {!! implode('', $errors->all('<div>:message</div>')) !!}
+@endif
+        <div class="mb-3">
+            <label>Designate To</label>
+            <select name="designated_to" id="designated_to" class="form-control" required>
+                <option value="rescue">Rescue</option>
+                <option value="pnp">PNP</option>
+                <option value="bfp">BFP</option>
+            </select>
+            @error('designated_to')
+            <div class="alert alert-danger">{{ $message }}</div>
+        @enderror
+        </div>
+
         <div class="mb-3">
             <label>Level</label>
             <select name="level" class="form-control" required>
@@ -72,22 +87,119 @@
         </div>
 
         <div class="mb-3">
-            <label>Description</label>
-            <textarea name="description" class="form-control" rows="4" required></textarea>
+            <label>Report Type</label>
+            <select name="report_type" id="report_type" class="form-control" required>
+                <!-- Options will be populated by JS -->
+            </select>
+            @error('report_type')
+                <div class="alert alert-danger">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="mb-3">
-            <label>Designate To</label>
-            <select name="designated_to" class="form-control" required>
-                <option value="rescue">Rescue</option>
-                <option value="pnp">PNP</option>
-                <option value="bfp">BFP</option>
-            </select>
+
+
+
+
+
+        <div class="mb-3" id="description_container" style="display: none;">
+            <label>Description</label>
+            <textarea name="description" id="description" class="form-control" rows="4"></textarea>
+            @error('description')
+                <div class="alert alert-danger">{{ $message }}</div>
+            @enderror
         </div>
+
+        
 
         <button class="btn btn-glass">Submit Report</button>
         
     </form>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const designatedToSelect = document.getElementById('designated_to');
+        const reportTypeSelect = document.getElementById('report_type');
+        const descriptionContainer = document.getElementById('description_container');
+        const descriptionTextarea = document.getElementById('description');
+
+        const reportTypes = {
+            'pnp': [
+                'Robbery or theft',
+                'Physical assault or street fight',
+                'Domestic violence',
+                'Gun-related incident',
+                'Suspicious person or activity',
+                'Missing person report',
+                'Drug-related incident',
+                'Traffic accident needing police assistance',
+                'Vandalism or property damage',
+                'Bomb threat or suspicious package',
+                'Others'
+            ],
+            'rescue': [
+                'Sudden flooding',
+                'Strong earthquake',
+                'Landslide occurrence',
+                'Typhoon-related emergencies',
+                'Flash floods',
+                'Building collapse due to disaster',
+                'Trapped or injured victims',
+                'Fire spreading due to strong winds',
+                'Road blockage affecting evacuation',
+                'Others'
+            ],
+            'bfp': [
+                'Structural or residential fire',
+                'Electrical fire',
+                'Grass or forest fire',
+                'Gas leak or explosion',
+                'Vehicle fire',
+                'Rescue from burning buildings',
+                'Fire alarm response',
+                'Industrial or chemical fire',
+                'Fire safety inspection',
+                'Fire-related medical emergency',
+                'Others'
+            ]
+        };
+
+        function updateReportTypes() {
+            const selectedDesignation = designatedToSelect.value;
+            const options = reportTypes[selectedDesignation] || [];
+            
+            reportTypeSelect.innerHTML = '';
+            
+            options.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                reportTypeSelect.appendChild(option);
+            });
+
+            // Trigger change to update description visibility
+            updateDescriptionVisibility();
+        }
+
+        function updateDescriptionVisibility() {
+            if (reportTypeSelect.value === 'Others') {
+                descriptionContainer.style.display = 'block';
+                descriptionTextarea.required = true;
+            } else {
+                descriptionContainer.style.display = 'none';
+                descriptionTextarea.required = false;
+                descriptionTextarea.value = ''; // Optional: clear value when hidden
+            }
+        }
+
+        designatedToSelect.addEventListener('change', updateReportTypes);
+        reportTypeSelect.addEventListener('change', updateDescriptionVisibility);
+
+        // Initialize on load
+        updateReportTypes();
+    });
+</script>
+
 @endsection
+
+

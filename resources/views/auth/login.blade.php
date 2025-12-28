@@ -43,6 +43,13 @@
             </a>
         </div>
 
+        @if (session('success'))
+            <div class="alert alert-success text-center" style="background-color: green; color: white;">
+                {{ session('success') }}
+            </div>
+        @endif
+
+
         <!-- Login Form -->
         <form method="POST" action="{{ route('login') }}">
             @csrf
