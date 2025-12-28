@@ -1,0 +1,63 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
+class AdminController extends Controller
+{
+    public function dashboard()
+    {
+        return view('admin.dashboard', [
+            'totalUsers' => User::count(),
+            'reporters' => User::where('role', 'reporter')->count(),
+            'designated' => User::where('role', 'designated')->count(),
+            'pending' => User::where('is_approved', false)->count(),
+        ]);
+    }
+
+    public function pending()
+    {
+        $users = User::where('role', 'reporter')
+            ->where('is_approved', false)
+            ->paginate(10);
+
+        return view('admin.pending', compact('users'));
+    }
+
+    public function approve(User $user)
+    {
+        $user->update(['is_approved' => true]);
+        return back()->with('success', 'User approved successfully.');
+    }
+
+    public function create()
+    {
+        return view('admin.create-user');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users',
+            'phone_number' => 'required|digits:11',
+            'role' => 'required|in:reporter,designated',
+            'password' => 'required|min:8',
+        ]);
+
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'role' => $request->role,
+            'password' => Hash::make($request->password),
+            'is_approved' => true,
+        ]);
+
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'User created successfully.');
+    }
+}

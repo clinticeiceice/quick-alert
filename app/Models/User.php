@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'role',
         'phone_number',
+        'is_approved'
     ];
 
     /**
@@ -96,5 +97,14 @@ class User extends Authenticatable
             'auth_token' => $token,
             'content_encoding' => $contentEncoding,
         ]);
+    }
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isApproved()
+    {
+        return $this->is_approved;
     }
 }

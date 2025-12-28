@@ -18,8 +18,16 @@ class DashboardController extends Controller
                             ->where('is_read', false)
                             ->latest()
                             ->get();
+        if (! Auth::user()->is_approved) {
+    Auth::logout();
+    return back()->withErrors([
+        'email' => 'Your account is pending admin approval.'
+    ]);
+}
 
         switch ($user->role) {
+            case 'admin':
+                 return redirect()->route('admin.dashboard');
             case 'reporter':
                 $reports = $user->reports()->latest()->paginate(5); // paginate reporter's reports
                 return view('dashboard.reporter', compact('reports', 'notifications'));

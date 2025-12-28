@@ -28,23 +28,27 @@ class RegisteredUserController extends Controller
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+{
+    $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+    User::create([
+        'name'         => $request->name,
+        'email'        => $request->email,
+        'password'     => Hash::make($request->password),
+        'role'         => 'reporter',
+        'is_approved'  => false, // IMPORTANT
+    ]);
 
-        event(new Registered($user));
+    // DO NOT LOGIN USER
+    // DO NOT FIRE Registered EVENT (optional)
+    // DO NOT REDIRECT TO DASHBOARD
 
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
-    }
+    return redirect()
+        ->route('login')
+        ->with('status', 'Your account has been registered and is pending admin approval.');
+}
 }

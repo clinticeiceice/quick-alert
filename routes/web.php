@@ -9,13 +9,20 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\AdminController;
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Route::get('/', function () {
     return view('welcome');
 });
-
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/pending', [AdminController::class, 'pending'])->name('admin.pending');
+    Route::post('/admin/approve/{user}', [AdminController::class, 'approve'])->name('admin.approve');
+    Route::get('/admin/create-user', [AdminController::class, 'create'])->name('admin.create');
+    Route::post('/admin/store-user', [AdminController::class, 'store'])->name('admin.store');
+});
 // Protected Routes (only logged-in users)
 Route::middleware(['auth'])->group(function () {
     // Dashboard
