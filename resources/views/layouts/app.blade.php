@@ -164,6 +164,17 @@
     text-align: center;
 }
 
+.hide-on-mobile {
+        display: block;
+    }
+
+    .show-on-mobile {
+        display: none;
+    }
+
+.flex-on-mobile {
+    display: block;
+}
 
 /* On very small screens, make it fixed */
 @media (max-width: 576px) {
@@ -179,6 +190,20 @@
         overflow-y: auto;
         border-radius: 8px;
         padding: 0.5rem;
+    }
+
+    .hide-on-mobile {
+        display: none;
+    }
+
+    .show-on-mobile {
+        display: inline;
+    }
+
+    .flex-on-mobile {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
     }
 }
 
@@ -392,71 +417,6 @@ async function tryAlternativeSubscription() {
         });
     }
 
-    // let audioCtx;
-    // let audioBuffer;
-    // let audioUnlocked = false;
-
-    // const myAudio = document.getElementById('sosSound');
-
-    // // Create and unlock AudioContext on user gesture
-    // async function unlockAudio() {
-    //     if (!audioCtx) {
-    //         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    //     }
-
-    //     if (audioCtx.state === "suspended") {
-    //         await audioCtx.resume();
-    //     }
-
-    //     // if (!audioUnlocked) {
-    //     //     await loadSound("/sounds/purge.mp3");
-    //     //     await loadSound("/sounds/sos.mp3");
-    //     //     audioUnlocked = true;
-    //     //     console.log("🔓 Audio context unlocked & sound loaded");
-    //     // }
-    // }
-
-    // // Fetch and decode the audio file into a buffer
-    // async function loadSound(url) {
-    //    await unlockAudio();
-
-    //     const response = await fetch(url);
-    //     const arrayBuffer = await response.arrayBuffer();
-    //     audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    // }
-
-    //     // Play the sound
-    // async function playSound(audioSource) {
-    //     await loadSound(audioSource);
-    //     console.log('Playing notification sound!');
-
-
-    //     if (!audioUnlocked || !audioBuffer) {
-    //         console.warn("Audio not unlocked or buffer not loaded");
-    //         return;
-    //     }
-
-    //     const source = audioCtx.createBufferSource();
-    //     source.buffer = audioBuffer;
-    //     source.connect(audioCtx.destination);
-    //     source.start(0);
-    // }
-
-    // if (!audioUnlocked) {
-    //     (async () => {
-    //         await unlockAudio();
-    //     })
-    //     document.getElementById("enable-sound").style.display = 'block';
-    // }else {
-    //     document.getElementById("enable-sound").style.display = 'none';
-    // }
-
-    // // Handle user click to unlock
-    // document.getElementById("enable-sound").addEventListener("click", async () => {
-    //     await unlockAudio();
-    //     document.getElementById("enable-sound").textContent = "✅ Sound Enabled";
-    // });
-
 });
 
 
@@ -469,7 +429,7 @@ async function tryAlternativeSubscription() {
 
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg glass-navbar fixed-top">
-    <div class="container">
+    <div class="container flex-on-mobile">
 
         <!-- Brand -->
         <a class="navbar-brand" href="{{ url('/') }}">
@@ -482,13 +442,13 @@ async function tryAlternativeSubscription() {
 </button> --}}
 
         <!-- COLLAPSIBLE CONTENT -->
-        <div class="navbar-collapse justify-content-end" id="mainNavbar">
+        <div class="navbar-collapse justify-content-end flex-on-mobile w-fit" id="mainNavbar">
 
             <!-- Install Buttons -->
-            <button id="installAppBtn" class="btn btn-install d-none me-2">📲 Install App</button>
-            <button id="enable-sound" class="btn btn-install d-none me-2">🔊 Enable Sound Alerts</button>
+            <button id="installAppBtn" class="btn btn-install d-none me-2">📲 <span class="hide-on-mobile">Install App</span></button>
+            <button id="enable-sound" class="btn btn-install d-none me-2">🔊 <span class="hide-on-mobile">Enable Sound Alerts</span></button>
             <button id="enableNotifications" class="btn btn-install me-2" style="display:none">
-                🚨 Enable Push Notifications
+                🚨 <span class="hide-on-mobile">Enable Push Notifications</span>
             </button>
 
             @guest
@@ -540,11 +500,15 @@ async function tryAlternativeSubscription() {
                 </div>
 
                 <!-- USER & LOGOUT -->
-                <a href="{{ route('profile.edit') }}"><span class="text-black me-3">👋 Hello, {{ Auth::user()->name }}</span></a>
+                <a href="{{ route('profile.edit') }}">
+                    <span class="text-black me-3 hide-on-mobile">👋 Hello, {{ Auth::user()->name }}</span>
+                    <span class="text-black me-3 show-on-mobile">⚙️</span>
+                </a>
 
-                <a class="d-flex btn  btn-sm justify-end" href="{{ route('logout') }}"
+                <a class="d-flex btn  btn-sm justify-end " href="{{ route('logout') }}"
                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    Logout
+                    <span class="hide-on-mobile">Logout</span>
+                    <span class="show-on-mobile"> <i class="bi bi-box-arrow-right"></i></span>
                 </a>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                     @csrf
@@ -554,12 +518,7 @@ async function tryAlternativeSubscription() {
         </div>
     </div>
 </nav>
-<script>
-document.getElementById('customNavbarToggler').addEventListener('click', function() {
-    const navbar = document.getElementById('mainNavbar');
-    navbar.classList.toggle('show'); // This adds/removes the 'show' class
-});
-</script>
+
 
     <script>
         let deferredPrompt;

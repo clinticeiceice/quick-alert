@@ -32,6 +32,7 @@ class AdminController extends Controller
         $users = User::when($request->has('filter'), function ($query) use($request){
             $query->where('role', $request->get('filter'));
         })
+        ->latest()
             ->paginate(10);
 
         return view('admin.list', compact('users'));
