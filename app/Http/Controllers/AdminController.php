@@ -71,4 +71,11 @@ class AdminController extends Controller
         return redirect()->route('admin.dashboard')
             ->with('success', 'User created successfully.');
     }
+
+    public function deleteUser($id)
+    {
+        $user = User::firstOrFail($id);
+        $user->delete();
+        return back()->with('success', 'User deleted successfully.');
+    }
 }
