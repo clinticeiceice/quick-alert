@@ -17,6 +17,18 @@ class DatabaseSeeder extends Seeder
 
         // Designated
         User::updateOrCreate(
+            ['role' => 'admin'],
+            [
+            'name' => 'Administrator',
+            'email' => 'admin@admin.com',
+            'password' => Hash::make('admin123'),
+            'role' => 'admin',
+            'phone_number' => '09123456789',
+            'is_approved' => 1,
+        ]);
+
+        // Designated
+        User::updateOrCreate(
             ['role' => 'designated'],
             [
             'name' => 'Designated',
