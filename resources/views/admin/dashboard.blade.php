@@ -55,6 +55,24 @@
             </a>
         </div>
     </div>
+<!--new-->
+    {{-- <div class="glass-card-white p-4 mb-4"> --}}
+    <div class="row justify-content-center p-2 mb-2">
+        <div class="col-6 col-md-6">
+            <a href="{{ route('admin.allreports')}}" class="text-decoration-none">
+                <div class="glass-card-white p-3 text-center h-100">
+                    <div class="glass-icon-stats mb-2">
+                        📊
+                    </div>
+                     
+                    <h3 class="mb-1 fw-bold no-animate"></h3>
+                    <p class="text-muted mb-0 small">All Reports</p>
+                </div>
+            </a>
+        </div>
+    </div>
+{{-- </div> --}}
+
 
     <!-- Quick Actions - Glassmorphic Style -->
     <div class="glass-card-white p-4 mb-4">

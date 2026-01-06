@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Report;
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
@@ -42,6 +43,13 @@ class AdminController extends Controller
     {
         $user->update(['is_approved' => true]);
         return back()->with('success', 'User approved successfully.');
+    }
+//new
+    public function allreport()
+    {
+        $reports = Report::all();
+
+    return view('admin.allreports', compact('reports'));
     }
 
     public function create()

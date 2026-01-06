@@ -24,6 +24,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/create-user', [AdminController::class, 'create'])->name('admin.create');
     Route::post('/admin/store-user', [AdminController::class, 'store'])->name('admin.store');
     Route::post('/admin/revoke/{user}', [AdminController::class, 'deleteUser'])->name('admin.revoke');
+    Route::get('/admin/allreports', [AdminController::class, 'allreport'])->name('admin.allreports');
 });
 // Protected Routes (only logged-in users)
 Route::middleware(['auth'])->group(function () {
