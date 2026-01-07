@@ -17,6 +17,7 @@ class AdminController extends Controller
             'reporters' => User::where('role', 'reporter')->count(),
             'designated' => User::where('role', 'designated')->count(),
             'pending' => User::where('is_approved', false)->count(),
+            'reports' => Report::count(),
         ]);
     }
 

@@ -65,7 +65,7 @@
                         📊
                     </div>
                      
-                    <h3 class="mb-1 fw-bold no-animate"></h3>
+                    <h3 class="mb-1 fw-bold no-animate">{{ $reports }}</h3>
                     <p class="text-muted mb-0 small">All Reports</p>
                 </div>
             </a>
