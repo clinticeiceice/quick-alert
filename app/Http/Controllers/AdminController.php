@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Report;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
 {
@@ -42,6 +43,21 @@ class AdminController extends Controller
     public function approve(User $user)
     {
         $user->update(['is_approved' => true]);
+
+        try {
+            if($user->role == 'reporter'){
+                Mail::send('emails.confirm-approved', [
+                        'reporter' => $user,
+                        'loginUrl' => route('login'),
+                    ], function ($message) use ($user) {
+                        $message->to($user->email)
+                            ->subject('Your Reporter Account Has Been Approved');
+                });
+
+            }
+        } catch (\Throwable $th) {
+            // ignore here
+        }
         return back()->with('success', 'User approved successfully.');
     }
 //new
